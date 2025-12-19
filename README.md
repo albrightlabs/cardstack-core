@@ -8,6 +8,7 @@ A flat-file kanban board framework built with PHP 8.1+, vanilla JavaScript, and 
 - **Drag and drop** — Reorder cards and columns intuitively
 - **Labels & due dates** — Categorize and track deadlines
 - **Column emojis** — Add visual identifiers to columns
+- **Board colors** — Customize board background colors
 - **Dark/light mode** — Automatic based on system preference
 - **Responsive design** — Works on desktop and mobile
 - **Admin authentication** — Secure access to board management
@@ -153,7 +154,8 @@ cardstack-core/
 │   └── 404.php             # Not found
 ├── .env                     # Your config (gitignored)
 ├── .env.example             # Config template
-└── composer.json
+├── composer.json
+└── LICENSE                  # MIT License
 ```
 
 ## API Endpoints
