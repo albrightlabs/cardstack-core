@@ -1,0 +1,85 @@
+{
+    "id": "example-getting-started",
+    "title": "Getting Started",
+    "color": "#0079bf",
+    "createdAt": "2025-01-01T00:00:00+00:00",
+    "columns": [
+        {
+            "id": "example-col-backlog",
+            "title": "Backlog",
+            "position": 0,
+            "cards": [
+                {
+                    "id": "example-card-1",
+                    "title": "Create your first board",
+                    "description": "Click the 'Create Board' button in the header to start organizing your work.",
+                    "labels": ["#61bd4f"],
+                    "dueDate": null,
+                    "position": 0,
+                    "createdAt": "2025-01-01T00:00:00+00:00"
+                },
+                {
+                    "id": "example-card-2",
+                    "title": "Customize your instance",
+                    "description": "Edit your .env file to change the site name, logo, and colors. Create custom.css and custom.js for additional styling and scripts.",
+                    "labels": [],
+                    "dueDate": null,
+                    "position": 1,
+                    "createdAt": "2025-01-01T00:00:00+00:00"
+                }
+            ],
+            "emoji": "📋"
+        },
+        {
+            "id": "example-col-todo",
+            "title": "To Do",
+            "position": 1,
+            "cards": [
+                {
+                    "id": "example-card-3",
+                    "title": "Add columns for your workflow",
+                    "description": "Common columns include: Backlog, To Do, In Progress, Review, Done",
+                    "labels": ["#f2d600"],
+                    "dueDate": null,
+                    "position": 0,
+                    "createdAt": "2025-01-01T00:00:00+00:00"
+                }
+            ],
+            "emoji": "📝"
+        },
+        {
+            "id": "example-col-progress",
+            "title": "In Progress",
+            "position": 2,
+            "cards": [
+                {
+                    "id": "example-card-4",
+                    "title": "Drag cards between columns",
+                    "description": "Click and drag cards to move them between columns or reorder them within a column.",
+                    "labels": ["#ff9f1a"],
+                    "dueDate": null,
+                    "position": 0,
+                    "createdAt": "2025-01-01T00:00:00+00:00"
+                }
+            ],
+            "emoji": "🚀"
+        },
+        {
+            "id": "example-col-done",
+            "title": "Done",
+            "position": 3,
+            "cards": [
+                {
+                    "id": "example-card-5",
+                    "title": "Install Cardstack",
+                    "description": "You've successfully set up the Cardstack kanban board framework!",
+                    "labels": ["#61bd4f"],
+                    "dueDate": null,
+                    "position": 0,
+                    "createdAt": "2025-01-01T00:00:00+00:00"
+                }
+            ],
+            "emoji": "✅"
+        }
+    ]
+}

@@ -1,0 +1,20 @@
+{
+    "name": "albrightlabs/cardstack-core",
+    "description": "A flat-file kanban board framework",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "require": {
+        "php": ">=8.1"
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
