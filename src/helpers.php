@@ -80,10 +80,15 @@ function sanitize(string $value): string
 
 /**
  * Get base URL from config
+ * Supports SITE_URL (standard) with APP_URL fallback for backwards compatibility
  */
 function baseUrl(): string
 {
-    return rtrim(\App\Config::get('APP_URL', 'http://localhost:8000'), '/');
+    $url = \App\Config::get('SITE_URL');
+    if (empty($url)) {
+        $url = \App\Config::get('APP_URL', 'http://localhost:8000');
+    }
+    return rtrim($url, '/');
 }
 
 /**
@@ -138,4 +143,35 @@ function getFlash(): ?array
     $flash = $_SESSION['flash'] ?? null;
     unset($_SESSION['flash']);
     return $flash;
+}
+
+/**
+ * Validate path for security (prevent directory traversal)
+ *
+ * @param string $path Path to validate
+ * @return bool True if path is safe, false otherwise
+ */
+function validatePath(string $path): bool
+{
+    // Reject directory traversal attempts
+    if (strpos($path, '..') !== false) {
+        return false;
+    }
+
+    // Reject null bytes
+    if (strpos($path, "\0") !== false) {
+        return false;
+    }
+
+    // Reject hidden files (starting with dot)
+    if (preg_match('/\/\./', $path) || strpos($path, '.') === 0) {
+        return false;
+    }
+
+    // Reject special characters in filenames
+    if (preg_match('/[<>:"\'|?*]/', $path)) {
+        return false;
+    }
+
+    return true;
 }

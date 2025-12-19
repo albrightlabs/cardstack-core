@@ -64,6 +64,24 @@ class Config
         return $instance->config[$key] ?? $_ENV[$key] ?? $default;
     }
 
+    /**
+     * Check if a feature flag is enabled
+     *
+     * @param string $name Feature name (e.g., 'editing' checks FEATURE_EDITING)
+     * @return bool True if feature is enabled
+     */
+    public static function feature(string $name): bool
+    {
+        $value = self::get("FEATURE_" . strtoupper($name), false);
+
+        // Convert string booleans
+        if (is_string($value)) {
+            return strtolower($value) === 'true' || $value === '1';
+        }
+
+        return (bool) $value;
+    }
+
     public static function getDataPath(): string
     {
         $path = self::get('DATA_PATH', './data');
