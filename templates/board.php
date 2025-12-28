@@ -4,7 +4,7 @@ declare(strict_types=1);
 $title = $board['title'] ?? 'Board';
 $bodyClass = 'board-page';
 $scripts = ['board.js'];
-$boardColor = $board['color'] ?? '#0079bf';
+$boardColor = $board['color'] ?? '#0d6efd';
 
 ob_start();
 ?>
@@ -304,36 +304,36 @@ ob_start();
                 <h6 class="board-menu-section-title">Board Color</h6>
                 <div class="board-color-picker" id="boardColorPicker">
                     <label class="board-color-option">
-                        <input type="radio" name="boardColor" value="#0079bf" <?= ($board['color'] ?? '#0079bf') === '#0079bf' ? 'checked' : '' ?>>
-                        <span class="board-color-swatch" style="background: #0079bf"></span>
+                        <input type="radio" name="boardColor" value="#0d6efd" <?= ($board['color'] ?? '#0d6efd') === '#0d6efd' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #0d6efd"></span>
                     </label>
                     <label class="board-color-option">
-                        <input type="radio" name="boardColor" value="#d29034" <?= ($board['color'] ?? '') === '#d29034' ? 'checked' : '' ?>>
-                        <span class="board-color-swatch" style="background: #d29034"></span>
+                        <input type="radio" name="boardColor" value="#6f42c1" <?= ($board['color'] ?? '') === '#6f42c1' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #6f42c1"></span>
                     </label>
                     <label class="board-color-option">
-                        <input type="radio" name="boardColor" value="#519839" <?= ($board['color'] ?? '') === '#519839' ? 'checked' : '' ?>>
-                        <span class="board-color-swatch" style="background: #519839"></span>
+                        <input type="radio" name="boardColor" value="#d63384" <?= ($board['color'] ?? '') === '#d63384' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #d63384"></span>
                     </label>
                     <label class="board-color-option">
-                        <input type="radio" name="boardColor" value="#b04632" <?= ($board['color'] ?? '') === '#b04632' ? 'checked' : '' ?>>
-                        <span class="board-color-swatch" style="background: #b04632"></span>
+                        <input type="radio" name="boardColor" value="#dc3545" <?= ($board['color'] ?? '') === '#dc3545' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #dc3545"></span>
                     </label>
                     <label class="board-color-option">
-                        <input type="radio" name="boardColor" value="#89609e" <?= ($board['color'] ?? '') === '#89609e' ? 'checked' : '' ?>>
-                        <span class="board-color-swatch" style="background: #89609e"></span>
+                        <input type="radio" name="boardColor" value="#fd7e14" <?= ($board['color'] ?? '') === '#fd7e14' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #fd7e14"></span>
                     </label>
                     <label class="board-color-option">
-                        <input type="radio" name="boardColor" value="#cd5a91" <?= ($board['color'] ?? '') === '#cd5a91' ? 'checked' : '' ?>>
-                        <span class="board-color-swatch" style="background: #cd5a91"></span>
+                        <input type="radio" name="boardColor" value="#ffc107" <?= ($board['color'] ?? '') === '#ffc107' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #ffc107"></span>
                     </label>
                     <label class="board-color-option">
-                        <input type="radio" name="boardColor" value="#4bbf6b" <?= ($board['color'] ?? '') === '#4bbf6b' ? 'checked' : '' ?>>
-                        <span class="board-color-swatch" style="background: #4bbf6b"></span>
+                        <input type="radio" name="boardColor" value="#198754" <?= ($board['color'] ?? '') === '#198754' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #198754"></span>
                     </label>
                     <label class="board-color-option">
-                        <input type="radio" name="boardColor" value="#00aecc" <?= ($board['color'] ?? '') === '#00aecc' ? 'checked' : '' ?>>
-                        <span class="board-color-swatch" style="background: #00aecc"></span>
+                        <input type="radio" name="boardColor" value="#0dcaf0" <?= ($board['color'] ?? '') === '#0dcaf0' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #0dcaf0"></span>
                     </label>
                 </div>
             </div>
