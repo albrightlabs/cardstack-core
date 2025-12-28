@@ -20,6 +20,14 @@ $flash = getFlash();
     <link rel="icon" type="image/png" href="<?= !empty($branding['favicon_url']) ? e($branding['favicon_url']) : asset('favicon.png') ?>">
     <link rel="stylesheet" href="<?= asset('style.css') ?>">
     <link rel="stylesheet" href="<?= asset('custom.css') ?>">
+    <?php if (!empty($branding['color_primary']) && $branding['color_primary'] !== '#3b82f6'): ?>
+    <style>
+        :root {
+            --primary-color: <?= e($branding['color_primary']) ?>;
+            --primary-hover: <?= e($branding['color_primary_hover']) ?>;
+        }
+    </style>
+    <?php endif; ?>
 </head>
 <body class="<?= e($bodyClass) ?>">
     <header class="site-header">
@@ -70,6 +78,14 @@ $flash = getFlash();
                     </a>
                     <?php endif; ?>
                 </div>
+                <?php if (!empty($branding['external_link_url'])): ?>
+                <a href="<?= e($branding['external_link_url']) ?>" class="header-external-link" target="_blank" rel="noopener noreferrer">
+                    <?php if (!empty($branding['external_link_logo'])): ?>
+                    <img src="<?= e($branding['external_link_logo']) ?>" alt="<?= e($branding['external_link_name']) ?>" width="16" height="16">
+                    <?php endif; ?>
+                    <?= e($branding['external_link_name']) ?> &rarr;
+                </a>
+                <?php endif; ?>
             </div>
         </div>
     </header>
@@ -275,9 +291,14 @@ $flash = getFlash();
     </script>
 
     <footer class="site-footer">
+        <?php if (!empty($branding['footer_text'])): ?>
+        <div class="footer-text"><?= $branding['footer_text'] ?></div>
+        <?php endif; ?>
+        <?php if ($branding['footer_show_powered_by']): ?>
         <div class="powered-by">
-            Powered by <a href="https://github.com/albrightlabs/cardstack-core" target="_blank" rel="noopener">Cardstack</a>
+            Powered by <a href="https://github.com/albrightlabs/cardstack-core" target="_blank" rel="noopener">CardStack</a>
         </div>
+        <?php endif; ?>
     </footer>
 </body>
 </html>

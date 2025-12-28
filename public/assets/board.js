@@ -1,5 +1,5 @@
 /**
- * Cardstack - Board View JavaScript
+ * CardStack - Board View JavaScript
  */
 
 const BoardApp = {
@@ -24,7 +24,7 @@ const BoardApp = {
 
         // Extract site name from initial page title (format: "Board Title - Site Name")
         const titleParts = document.title.split(' - ');
-        this.state.siteName = titleParts.length > 1 ? titleParts[titleParts.length - 1] : 'Cardstack';
+        this.state.siteName = titleParts.length > 1 ? titleParts[titleParts.length - 1] : 'CardStack';
 
         this.initBoardTitle();
         this.initStarButton();

@@ -71,8 +71,8 @@
             "cards": [
                 {
                     "id": "example-card-5",
-                    "title": "Install Cardstack",
-                    "description": "You've successfully set up the Cardstack kanban board framework!",
+                    "title": "Install CardStack",
+                    "description": "You've successfully set up the CardStack kanban board framework!",
                     "labels": ["#61bd4f"],
                     "dueDate": null,
                     "position": 0,

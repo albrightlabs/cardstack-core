@@ -10,7 +10,52 @@ class Config
 
     private function __construct()
     {
+        $this->loadDefaults();
         $this->loadEnv();
+    }
+
+    /**
+     * Load default configuration values
+     */
+    private function loadDefaults(): void
+    {
+        $this->config = [
+            // Site Identity
+            'SITE_NAME' => 'CardStack',
+            'SITE_TAGLINE' => 'A flat-file kanban board',
+            'SITE_EMOJI' => '📋',
+            'SITE_URL' => '',
+
+            // Branding - Images
+            'LOGO_URL' => '',
+            'LOGO_WIDTH' => '120',
+            'FAVICON_URL' => '',
+            'FAVICON_EMOJI' => '',
+            'FAVICON_LETTER' => '',
+            'FAVICON_SHOW_LETTER' => 'true',
+
+            // Branding - External Link
+            'EXTERNAL_LINK_NAME' => '',
+            'EXTERNAL_LINK_URL' => '',
+            'EXTERNAL_LINK_LOGO' => '',
+
+            // Branding - Footer
+            'FOOTER_TEXT' => '',
+            'FOOTER_SHOW_POWERED_BY' => 'true',
+
+            // Colors
+            'COLOR_PRIMARY' => '#3b82f6',
+            'COLOR_PRIMARY_HOVER' => '#2563eb',
+
+            // Security
+            'ADMIN_PASSWORD' => '',
+
+            // Features
+            'FEATURE_DARK_MODE' => 'true',
+
+            // Storage
+            'DATA_PATH' => './data',
+        ];
     }
 
     public static function getInstance(): self
@@ -100,26 +145,57 @@ class Config
     }
 
     /**
-     * Get branding configuration for logo and favicon
+     * Get branding configuration for templates
      */
     public static function getBranding(): array
     {
-        $showLetter = self::get('FAVICON_SHOW_LETTER', 'true');
-        // Convert string boolean
+        $showLetter = self::get('FAVICON_SHOW_LETTER');
+        $showPoweredBy = self::get('FOOTER_SHOW_POWERED_BY');
+
+        // Convert string booleans
         if (is_string($showLetter)) {
             $showLetter = strtolower($showLetter) === 'true' || $showLetter === '1';
         }
+        if (is_string($showPoweredBy)) {
+            $showPoweredBy = strtolower($showPoweredBy) === 'true' || $showPoweredBy === '1';
+        }
 
         return [
-            'site_name' => self::get('SITE_NAME', self::get('APP_NAME', 'Cardstack')),
-            'site_emoji' => self::get('SITE_EMOJI', '📋'),
-            'logo_url' => self::get('LOGO_URL', ''),
-            'logo_width' => self::get('LOGO_WIDTH', '120'),
-            'favicon_url' => self::get('FAVICON_URL', ''),
-            'favicon_emoji' => self::get('FAVICON_EMOJI', ''),
-            'favicon_letter' => self::get('FAVICON_LETTER', ''),
+            // Site Identity
+            'site_name' => self::get('SITE_NAME'),
+            'site_tagline' => self::get('SITE_TAGLINE'),
+            'site_emoji' => self::get('SITE_EMOJI'),
+            'site_url' => self::get('SITE_URL'),
+
+            // Images
+            'logo_url' => self::get('LOGO_URL'),
+            'logo_width' => self::get('LOGO_WIDTH'),
+            'favicon_url' => self::get('FAVICON_URL'),
+            'favicon_emoji' => self::get('FAVICON_EMOJI'),
+            'favicon_letter' => self::get('FAVICON_LETTER'),
             'favicon_show_letter' => $showLetter,
+
+            // External Link
+            'external_link_name' => self::get('EXTERNAL_LINK_NAME'),
+            'external_link_url' => self::get('EXTERNAL_LINK_URL'),
+            'external_link_logo' => self::get('EXTERNAL_LINK_LOGO'),
+
+            // Footer
+            'footer_text' => self::get('FOOTER_TEXT'),
+            'footer_show_powered_by' => $showPoweredBy,
+
+            // Colors
+            'color_primary' => self::get('COLOR_PRIMARY'),
+            'color_primary_hover' => self::get('COLOR_PRIMARY_HOVER'),
         ];
+    }
+
+    /**
+     * Get all configuration as array
+     */
+    public static function all(): array
+    {
+        return self::getInstance()->config;
     }
 
     // Prevent cloning

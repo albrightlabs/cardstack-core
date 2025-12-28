@@ -1,4 +1,4 @@
-# Cardstack
+# CardStack
 
 A flat-file kanban board framework built with PHP 8.1+, vanilla JavaScript, and JSON storage. No database required.
 
@@ -22,7 +22,7 @@ A flat-file kanban board framework built with PHP 8.1+, vanilla JavaScript, and 
 
 ## Installation
 
-Cardstack is designed as a framework that you clone and customize. Your board data lives in the `data/` directory which is gitignored, allowing you to pull updates from upstream without conflicts.
+CardStack is designed as a framework that you clone and customize. Your board data lives in the `data/` directory which is gitignored, allowing you to pull updates from upstream without conflicts.
 
 ### Quick Start
 
@@ -82,7 +82,7 @@ All configuration is done via the `.env` file:
 | `APP_URL` | Base URL (no trailing slash) | `http://localhost:8000` |
 | `ADMIN_PASSWORD` | Password for admin access | `changeme` |
 | `DATA_PATH` | Path to data storage | `./data` |
-| `SITE_NAME` | Site name in header/title | `Cardstack` |
+| `SITE_NAME` | Site name in header/title | `CardStack` |
 | `SITE_EMOJI` | Emoji next to site name | `📋` |
 | `LOGO_URL` | Custom logo image URL | (empty) |
 | `LOGO_WIDTH` | Max logo width in pixels | `120` |

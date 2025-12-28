@@ -1,5 +1,5 @@
 /**
- * Cardstack - Core Application JavaScript
+ * CardStack - Core Application JavaScript
  */
 
 const App = {
