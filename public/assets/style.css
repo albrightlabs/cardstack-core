@@ -501,7 +501,6 @@ input, textarea {
    Board View
    ============================================ */
 .board-page .main-content {
-    background: var(--board-color, var(--accent-color));
     min-height: calc(100vh - var(--header-height));
     overflow: hidden;
 }
@@ -510,6 +509,7 @@ input, textarea {
     height: calc(100vh - var(--header-height));
     display: flex;
     flex-direction: column;
+    background: var(--board-color, var(--accent-color));
 }
 
 .board-header {
@@ -536,7 +536,8 @@ input, textarea {
     padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-sm);
     outline: none;
-    min-width: 100px;
+    width: auto;
+    max-width: 400px;
     transition: all 0.15s ease;
 }
 
@@ -1248,24 +1249,36 @@ input, textarea {
 }
 
 /* ============================================
-   Board Menu Dropdown
+   Board Menu Modal
    ============================================ */
-.board-menu-dropdown {
+.board-menu-modal {
     position: fixed;
-    top: var(--header-height);
-    right: 0;
-    width: 340px;
-    height: calc(100vh - var(--header-height));
-    background-color: var(--bg-primary);
-    border-left: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sidebar);
-    z-index: 200;
+    inset: 0;
+    z-index: 1000;
     display: none;
-    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-5);
 }
 
-.board-menu-dropdown.show {
+.board-menu-modal.show {
     display: flex;
+}
+
+.board-menu-backdrop {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.board-menu-dialog {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    background-color: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 1;
 }
 
 .board-menu-header {
@@ -1297,6 +1310,7 @@ input, textarea {
 
 .board-menu-content {
     overflow-y: auto;
+    max-height: 60vh;
 }
 
 .board-menu-item {
@@ -1335,6 +1349,22 @@ input, textarea {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: var(--space-3);
+}
+
+.board-title-input {
+    width: 100%;
+    padding: var(--space-3);
+    font-size: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: border-color 0.15s ease;
+}
+
+.board-title-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
 }
 
 .board-color-picker {
@@ -1703,9 +1733,9 @@ input, textarea {
         flex: 1;
     }
 
-    .board-menu-dropdown {
-        width: 100%;
-        box-shadow: var(--shadow-modal);
+    .board-menu-dialog {
+        max-width: 100%;
+        border-radius: 0;
     }
 
     .board-column {

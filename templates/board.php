@@ -287,58 +287,65 @@ ob_start();
     </div>
 </div>
 
-<!-- Board Menu Dropdown -->
-<div class="board-menu-dropdown" id="boardMenuDropdown">
-    <div class="board-menu-header">
-        <h5>Menu</h5>
-        <button type="button" class="board-menu-close">&times;</button>
-    </div>
-    <div class="board-menu-content">
-        <div class="board-menu-section">
-            <h6 class="board-menu-section-title">Board Color</h6>
-            <div class="board-color-picker" id="boardColorPicker">
-                <label class="board-color-option">
-                    <input type="radio" name="boardColor" value="#0079bf" <?= ($board['color'] ?? '#0079bf') === '#0079bf' ? 'checked' : '' ?>>
-                    <span class="board-color-swatch" style="background: #0079bf"></span>
-                </label>
-                <label class="board-color-option">
-                    <input type="radio" name="boardColor" value="#d29034" <?= ($board['color'] ?? '') === '#d29034' ? 'checked' : '' ?>>
-                    <span class="board-color-swatch" style="background: #d29034"></span>
-                </label>
-                <label class="board-color-option">
-                    <input type="radio" name="boardColor" value="#519839" <?= ($board['color'] ?? '') === '#519839' ? 'checked' : '' ?>>
-                    <span class="board-color-swatch" style="background: #519839"></span>
-                </label>
-                <label class="board-color-option">
-                    <input type="radio" name="boardColor" value="#b04632" <?= ($board['color'] ?? '') === '#b04632' ? 'checked' : '' ?>>
-                    <span class="board-color-swatch" style="background: #b04632"></span>
-                </label>
-                <label class="board-color-option">
-                    <input type="radio" name="boardColor" value="#89609e" <?= ($board['color'] ?? '') === '#89609e' ? 'checked' : '' ?>>
-                    <span class="board-color-swatch" style="background: #89609e"></span>
-                </label>
-                <label class="board-color-option">
-                    <input type="radio" name="boardColor" value="#cd5a91" <?= ($board['color'] ?? '') === '#cd5a91' ? 'checked' : '' ?>>
-                    <span class="board-color-swatch" style="background: #cd5a91"></span>
-                </label>
-                <label class="board-color-option">
-                    <input type="radio" name="boardColor" value="#4bbf6b" <?= ($board['color'] ?? '') === '#4bbf6b' ? 'checked' : '' ?>>
-                    <span class="board-color-swatch" style="background: #4bbf6b"></span>
-                </label>
-                <label class="board-color-option">
-                    <input type="radio" name="boardColor" value="#00aecc" <?= ($board['color'] ?? '') === '#00aecc' ? 'checked' : '' ?>>
-                    <span class="board-color-swatch" style="background: #00aecc"></span>
-                </label>
-            </div>
+<!-- Board Menu Modal -->
+<div class="board-menu-modal" id="boardMenuModal">
+    <div class="board-menu-backdrop"></div>
+    <div class="board-menu-dialog">
+        <div class="board-menu-header">
+            <h5>Board Settings</h5>
+            <button type="button" class="board-menu-close">&times;</button>
         </div>
-        <div class="board-menu-section">
-            <button type="button" class="board-menu-item board-menu-item-danger" id="deleteBoardBtn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-                Delete Board
-            </button>
+        <div class="board-menu-content">
+            <div class="board-menu-section">
+                <h6 class="board-menu-section-title">Board Title</h6>
+                <input type="text" class="board-title-input" id="boardTitleInput" value="<?= e($board['title']) ?>">
+            </div>
+            <div class="board-menu-section">
+                <h6 class="board-menu-section-title">Board Color</h6>
+                <div class="board-color-picker" id="boardColorPicker">
+                    <label class="board-color-option">
+                        <input type="radio" name="boardColor" value="#0079bf" <?= ($board['color'] ?? '#0079bf') === '#0079bf' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #0079bf"></span>
+                    </label>
+                    <label class="board-color-option">
+                        <input type="radio" name="boardColor" value="#d29034" <?= ($board['color'] ?? '') === '#d29034' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #d29034"></span>
+                    </label>
+                    <label class="board-color-option">
+                        <input type="radio" name="boardColor" value="#519839" <?= ($board['color'] ?? '') === '#519839' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #519839"></span>
+                    </label>
+                    <label class="board-color-option">
+                        <input type="radio" name="boardColor" value="#b04632" <?= ($board['color'] ?? '') === '#b04632' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #b04632"></span>
+                    </label>
+                    <label class="board-color-option">
+                        <input type="radio" name="boardColor" value="#89609e" <?= ($board['color'] ?? '') === '#89609e' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #89609e"></span>
+                    </label>
+                    <label class="board-color-option">
+                        <input type="radio" name="boardColor" value="#cd5a91" <?= ($board['color'] ?? '') === '#cd5a91' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #cd5a91"></span>
+                    </label>
+                    <label class="board-color-option">
+                        <input type="radio" name="boardColor" value="#4bbf6b" <?= ($board['color'] ?? '') === '#4bbf6b' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #4bbf6b"></span>
+                    </label>
+                    <label class="board-color-option">
+                        <input type="radio" name="boardColor" value="#00aecc" <?= ($board['color'] ?? '') === '#00aecc' ? 'checked' : '' ?>>
+                        <span class="board-color-swatch" style="background: #00aecc"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="board-menu-section">
+                <button type="button" class="board-menu-item board-menu-item-danger" id="deleteBoardBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    Delete Board
+                </button>
+            </div>
         </div>
     </div>
 </div>

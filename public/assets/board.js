@@ -101,6 +101,12 @@ const BoardApp = {
                     });
                     this.state.board.title = newTitle;
                     document.title = `${newTitle} - ${this.state.siteName}`;
+
+                    // Sync with modal title input
+                    const titleInput = document.getElementById('boardTitleInput');
+                    if (titleInput) {
+                        titleInput.value = newTitle;
+                    }
                 } catch (error) {
                     titleEl.textContent = originalTitle;
                     App.toast('Failed to update board title', 'error');
@@ -932,16 +938,55 @@ const BoardApp = {
      */
     initBoardMenu() {
         const menuBtn = document.getElementById('boardMenuBtn');
-        const menu = document.getElementById('boardMenuDropdown');
-        const closeBtn = menu?.querySelector('.board-menu-close');
+        const modal = document.getElementById('boardMenuModal');
+        const closeBtn = modal?.querySelector('.board-menu-close');
+        const backdrop = modal?.querySelector('.board-menu-backdrop');
+        const titleInput = document.getElementById('boardTitleInput');
+
+        const closeModal = () => {
+            modal.classList.remove('show');
+        };
 
         menuBtn?.addEventListener('click', () => {
-            menu.classList.toggle('show');
+            // Sync title input with current board title
+            if (titleInput) {
+                titleInput.value = this.state.board.title;
+            }
+            modal.classList.add('show');
         });
 
-        closeBtn?.addEventListener('click', () => {
-            menu.classList.remove('show');
-        });
+        closeBtn?.addEventListener('click', closeModal);
+        backdrop?.addEventListener('click', closeModal);
+
+        // Board title input
+        if (titleInput) {
+            let saveTimeout;
+            titleInput.addEventListener('input', () => {
+                const newTitle = titleInput.value.trim();
+                if (!newTitle) return;
+
+                // Update header title immediately
+                const headerTitle = document.querySelector('.board-title');
+                if (headerTitle) {
+                    headerTitle.textContent = newTitle;
+                }
+
+                // Debounce save to API
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(async () => {
+                    try {
+                        await App.api(`/api/boards/${this.state.board.id}`, {
+                            method: 'PUT',
+                            body: JSON.stringify({ title: newTitle })
+                        });
+                        this.state.board.title = newTitle;
+                        document.title = `${newTitle} - ${this.state.siteName}`;
+                    } catch (error) {
+                        App.toast('Failed to update board title', 'error');
+                    }
+                }, 500);
+            });
+        }
 
         // Board color picker
         const colorPicker = document.getElementById('boardColorPicker');
@@ -990,8 +1035,8 @@ const BoardApp = {
             if (e.key === 'Escape') {
                 this.hidePopovers();
 
-                const boardMenu = document.getElementById('boardMenuDropdown');
-                boardMenu?.classList.remove('show');
+                const boardMenuModal = document.getElementById('boardMenuModal');
+                boardMenuModal?.classList.remove('show');
 
                 document.querySelectorAll('.column-menu-dropdown.show').forEach(d => {
                     d.classList.remove('show');
