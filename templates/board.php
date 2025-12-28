@@ -121,7 +121,7 @@ ob_start();
 
         <div class="add-column-wrapper">
             <button type="button" class="btn btn-add-column" id="addColumnBtn">
-                <span class="btn-icon">+</span> Add another column
+                <span class="btn-icon">+</span> Add column
             </button>
             <form class="add-column-form" id="addColumnForm" style="display: none;">
                 <input type="text" class="column-input" placeholder="Enter column title..." required>
@@ -338,7 +338,7 @@ ob_start();
                 </div>
             </div>
             <div class="board-menu-section">
-                <button type="button" class="board-menu-item board-menu-item-danger" id="deleteBoardBtn">
+                <button type="button" class="btn btn-danger btn-block" id="deleteBoardBtn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6"></polyline>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
