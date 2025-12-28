@@ -887,7 +887,7 @@ input, textarea {
 }
 
 /* ============================================
-   Modals
+   Modals (matches TodoStack modal styling)
    ============================================ */
 .modal {
     position: fixed;
@@ -896,12 +896,16 @@ input, textarea {
     display: none;
     align-items: center;
     justify-content: center;
-    padding: var(--space-10) var(--space-5);
-    overflow-y: auto;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
 }
 
 .modal.show {
     display: flex;
+    opacity: 1;
+    visibility: visible;
 }
 
 .modal-backdrop {
@@ -913,8 +917,16 @@ input, textarea {
 .modal-dialog {
     position: relative;
     width: 100%;
-    max-width: 400px;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
     z-index: 1;
+    transform: translateY(20px);
+    transition: transform 0.2s ease;
+}
+
+.modal.show .modal-dialog {
+    transform: translateY(0);
 }
 
 .modal-lg {
@@ -923,21 +935,22 @@ input, textarea {
 
 .modal-content {
     background-color: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-modal);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-elevated);
 }
 
 .modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem 1.5rem;
+    gap: 12px;
+    padding: 16px 20px;
     border-bottom: 1px solid var(--border-color);
 }
 
 .modal-title {
-    font-size: 18px;
+    flex: 1;
+    font-size: 1.125rem;
     font-weight: 600;
     color: var(--text-primary);
 }
@@ -949,6 +962,7 @@ input, textarea {
     padding: var(--space-1);
     border-radius: var(--radius-sm);
     transition: all 0.15s ease;
+    flex-shrink: 0;
 }
 
 .modal-close:hover {
@@ -957,14 +971,14 @@ input, textarea {
 }
 
 .modal-body {
-    padding: 1.5rem;
+    padding: 20px;
 }
 
 .modal-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 0.5rem;
-    padding: 1rem 1.5rem;
+    gap: 8px;
+    padding: 16px 20px;
     border-top: 1px solid var(--border-color);
 }
 
@@ -1249,7 +1263,7 @@ input, textarea {
 }
 
 /* ============================================
-   Board Menu Modal
+   Board Menu Modal (matches TodoStack modal styling)
    ============================================ */
 .board-menu-modal {
     position: fixed;
@@ -1258,11 +1272,16 @@ input, textarea {
     display: none;
     align-items: center;
     justify-content: center;
-    padding: var(--space-5);
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
 }
 
 .board-menu-modal.show {
     display: flex;
+    opacity: 1;
+    visibility: visible;
 }
 
 .board-menu-backdrop {
@@ -1274,23 +1293,31 @@ input, textarea {
 .board-menu-dialog {
     position: relative;
     width: 100%;
-    max-width: 380px;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
     background-color: var(--bg-primary);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-elevated);
     z-index: 1;
+    transform: translateY(20px);
+    transition: transform 0.2s ease;
+}
+
+.board-menu-modal.show .board-menu-dialog {
+    transform: translateY(0);
 }
 
 .board-menu-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-4) var(--space-5);
+    padding: 16px 20px;
     border-bottom: 1px solid var(--border-color);
 }
 
 .board-menu-header h5 {
-    font-size: 16px;
+    font-size: 1.125rem;
     font-weight: 600;
     color: var(--text-primary);
 }
@@ -1309,8 +1336,9 @@ input, textarea {
 }
 
 .board-menu-content {
+    padding: 20px;
     overflow-y: auto;
-    max-height: 60vh;
+    max-height: 70vh;
 }
 
 .board-menu-item {
@@ -1334,30 +1362,30 @@ input, textarea {
 }
 
 .board-menu-section {
-    padding: var(--space-3) var(--space-4);
-    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 16px;
 }
 
 .board-menu-section:last-child {
-    border-bottom: none;
+    margin-bottom: 0;
 }
 
 .board-menu-section-title {
-    font-size: 12px;
+    display: block;
+    font-size: 0.75rem;
     font-weight: 600;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: var(--space-3);
+    margin-bottom: 8px;
 }
 
 .board-title-input {
     width: 100%;
-    padding: var(--space-3);
-    font-size: 14px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    background-color: var(--bg-primary);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-secondary);
     color: var(--text-primary);
     transition: border-color 0.15s ease;
 }
@@ -1734,8 +1762,13 @@ input, textarea {
     }
 
     .board-menu-dialog {
-        max-width: 100%;
-        border-radius: 0;
+        margin: 10px;
+        max-height: calc(100vh - 20px);
+    }
+
+    .modal-dialog {
+        margin: 10px;
+        max-height: calc(100vh - 20px);
     }
 
     .board-column {
