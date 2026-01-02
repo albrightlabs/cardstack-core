@@ -41,9 +41,14 @@ class Api
         // Require authentication for all API endpoints
         Auth::requireAuth();
 
-        // Require CSRF for mutation methods
+        // Require CSRF and write permission for mutation methods
         if (in_array($this->method, ['POST', 'PUT', 'DELETE', 'PATCH'])) {
             Auth::requireCsrf();
+
+            // Check write permission (admins only)
+            if (!Auth::canWrite()) {
+                jsonError('Read-only access. Modifications not allowed.', 403);
+            }
         }
 
         try {

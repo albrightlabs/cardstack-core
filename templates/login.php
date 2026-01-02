@@ -16,12 +16,20 @@ $error = $error ?? null;
     <title>Login - <?= e($appName) ?></title>
     <link rel="icon" type="image/png" href="<?= !empty($branding['favicon_url']) ? e($branding['favicon_url']) : asset('favicon.png') ?>">
     <link rel="stylesheet" href="<?= asset('style.css') ?>">
+    <?php if (!empty($branding['color_primary']) && $branding['color_primary'] !== '#3b82f6'): ?>
+    <style>
+        :root {
+            --accent-color: <?= e($branding['color_primary']) ?>;
+            --accent-hover: <?= e($branding['color_primary_hover']) ?>;
+        }
+    </style>
+    <?php endif; ?>
 </head>
 <body class="password-page">
     <div class="password-container">
-        <div class="password-icon">🔒</div>
-        <h1>Password Required</h1>
-        <p class="password-section-name">The <strong><?= e($appName) ?></strong> section is protected.</p>
+        <div class="password-icon">🔐</div>
+        <h1>Sign In</h1>
+        <p class="password-section-name">Enter your credentials to access <strong><?= e($appName) ?></strong>.</p>
 
         <?php if ($error): ?>
         <div class="password-error"><?= e($error) ?></div>
@@ -29,12 +37,14 @@ $error = $error ?? null;
 
         <form method="POST" action="<?= baseUrl() ?>/login" class="password-form">
             <?= Auth::csrfField() ?>
+            <input type="email" id="email" name="email" class="password-input"
+                   placeholder="Email address"
+                   value="<?= e($_POST['email'] ?? '') ?>"
+                   required autofocus>
             <input type="password" id="password" name="password" class="password-input"
-                   placeholder="Enter password" required autofocus>
-            <button type="submit" class="password-submit">Unlock</button>
+                   placeholder="Password" required>
+            <button type="submit" class="password-submit">Sign In</button>
         </form>
-
-        <p class="password-hint">Enter password to access this section.</p>
     </div>
 
     <!-- Dynamic Favicon Generation -->
@@ -149,7 +159,7 @@ $error = $error ?? null;
         if (faviconUrl) {
             setFaviconFromImage(faviconUrl, letter, options);
         } else {
-            var emoji = faviconEmoji || siteEmoji || '📄';
+            var emoji = faviconEmoji || siteEmoji || '📋';
             setFaviconFromEmoji(emoji, letter, options);
         }
     })();

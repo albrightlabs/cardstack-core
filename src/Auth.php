@@ -6,9 +6,16 @@ namespace App;
 class Auth
 {
     private const SESSION_LIFETIME = 7200; // 2 hours
-    private const CSRF_TOKEN_KEY = 'csrf_token';
-    private const AUTH_KEY = 'authenticated';
-    private const AUTH_TIME_KEY = 'auth_time';
+    private const SESSION_KEYS = [
+        'user_id',
+        'user_email',
+        'user_role',
+        'is_super_admin',
+        'auth_time',
+        'csrf_token',
+    ];
+
+    private static ?UserManager $userManager = null;
 
     public static function init(): void
     {
@@ -26,38 +33,46 @@ class Auth
         session_start();
 
         // Check session timeout
-        if (isset($_SESSION[self::AUTH_TIME_KEY])) {
-            $elapsed = time() - $_SESSION[self::AUTH_TIME_KEY];
+        if (isset($_SESSION['auth_time'])) {
+            $elapsed = time() - $_SESSION['auth_time'];
             if ($elapsed > self::SESSION_LIFETIME) {
                 self::logout();
             }
         }
     }
 
-    public static function login(string $password): bool
+    public static function getUserManager(): UserManager
+    {
+        if (self::$userManager === null) {
+            self::$userManager = new UserManager();
+        }
+        return self::$userManager;
+    }
+
+    public static function login(string $email, string $password): ?array
     {
         self::init();
 
-        $adminPassword = Config::get('ADMIN_PASSWORD');
+        $userManager = self::getUserManager();
+        $user = $userManager->verifyPassword($email, $password);
 
-        if ($adminPassword === null || $adminPassword === '') {
-            return false;
+        if ($user === null) {
+            return null;
         }
 
-        if (hash_equals($adminPassword, $password)) {
-            // Regenerate session ID on login for security
-            session_regenerate_id(true);
+        // Regenerate session ID on login for security
+        session_regenerate_id(true);
 
-            $_SESSION[self::AUTH_KEY] = true;
-            $_SESSION[self::AUTH_TIME_KEY] = time();
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_email'] = $user['email'];
+        $_SESSION['user_role'] = $user['role'];
+        $_SESSION['is_super_admin'] = $user['is_super_admin'];
+        $_SESSION['auth_time'] = time();
 
-            // Generate new CSRF token
-            self::regenerateCsrfToken();
+        // Generate new CSRF token
+        self::regenerateCsrfToken();
 
-            return true;
-        }
-
-        return false;
+        return $user;
     }
 
     public static function logout(): void
@@ -86,20 +101,20 @@ class Auth
     {
         self::init();
 
-        if (!isset($_SESSION[self::AUTH_KEY]) || $_SESSION[self::AUTH_KEY] !== true) {
+        if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
             return false;
         }
 
         // Check session timeout
-        if (isset($_SESSION[self::AUTH_TIME_KEY])) {
-            $elapsed = time() - $_SESSION[self::AUTH_TIME_KEY];
+        if (isset($_SESSION['auth_time'])) {
+            $elapsed = time() - $_SESSION['auth_time'];
             if ($elapsed > self::SESSION_LIFETIME) {
                 self::logout();
                 return false;
             }
 
             // Update last activity time
-            $_SESSION[self::AUTH_TIME_KEY] = time();
+            $_SESSION['auth_time'] = time();
         }
 
         return true;
@@ -108,29 +123,92 @@ class Auth
     public static function requireAuth(): void
     {
         if (!self::check()) {
-            if (isAjax()) {
+            if (self::isAjaxRequest()) {
                 jsonError('Unauthorized', 401);
             }
-            redirect(baseUrl() . '/login');
+            header('Location: /login');
+            exit;
         }
+    }
+
+    public static function requireAdmin(): void
+    {
+        self::requireAuth();
+
+        if (!self::isAdmin()) {
+            if (self::isAjaxRequest()) {
+                jsonError('Admin access required', 403);
+            }
+            header('Location: /');
+            exit;
+        }
+    }
+
+    public static function canWrite(): bool
+    {
+        return self::isAdmin();
+    }
+
+    public static function isAdmin(): bool
+    {
+        self::init();
+        return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
+    }
+
+    public static function isReadOnly(): bool
+    {
+        self::init();
+        return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'readonly';
+    }
+
+    public static function isSuperAdmin(): bool
+    {
+        self::init();
+        return isset($_SESSION['is_super_admin']) && $_SESSION['is_super_admin'] === true;
+    }
+
+    public static function getCurrentUser(): ?array
+    {
+        if (!self::check()) {
+            return null;
+        }
+
+        return [
+            'id' => $_SESSION['user_id'] ?? null,
+            'email' => $_SESSION['user_email'] ?? null,
+            'role' => $_SESSION['user_role'] ?? null,
+            'is_super_admin' => $_SESSION['is_super_admin'] ?? false,
+        ];
+    }
+
+    public static function getCurrentUserId(): ?string
+    {
+        self::init();
+        return $_SESSION['user_id'] ?? null;
+    }
+
+    public static function getCurrentUserRole(): ?string
+    {
+        self::init();
+        return $_SESSION['user_role'] ?? null;
     }
 
     public static function getCsrfToken(): string
     {
         self::init();
 
-        if (!isset($_SESSION[self::CSRF_TOKEN_KEY])) {
+        if (!isset($_SESSION['csrf_token'])) {
             self::regenerateCsrfToken();
         }
 
-        return $_SESSION[self::CSRF_TOKEN_KEY];
+        return $_SESSION['csrf_token'];
     }
 
     public static function regenerateCsrfToken(): string
     {
         self::init();
-        $_SESSION[self::CSRF_TOKEN_KEY] = bin2hex(random_bytes(32));
-        return $_SESSION[self::CSRF_TOKEN_KEY];
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        return $_SESSION['csrf_token'];
     }
 
     public static function validateCsrf(?string $token = null): bool
@@ -144,11 +222,11 @@ class Auth
                 ?? null;
         }
 
-        if ($token === null || !isset($_SESSION[self::CSRF_TOKEN_KEY])) {
+        if ($token === null || !isset($_SESSION['csrf_token'])) {
             return false;
         }
 
-        return hash_equals($_SESSION[self::CSRF_TOKEN_KEY], $token);
+        return hash_equals($_SESSION['csrf_token'], $token);
     }
 
     public static function requireCsrf(): void
@@ -160,11 +238,19 @@ class Auth
 
     public static function csrfField(): string
     {
-        return '<input type="hidden" name="csrf_token" value="' . e(self::getCsrfToken()) . '">';
+        return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(self::getCsrfToken(), ENT_QUOTES, 'UTF-8') . '">';
     }
 
     public static function csrfMeta(): string
     {
-        return '<meta name="csrf-token" content="' . e(self::getCsrfToken()) . '">';
+        return '<meta name="csrf-token" content="' . htmlspecialchars(self::getCsrfToken(), ENT_QUOTES, 'UTF-8') . '">';
+    }
+
+    private static function isAjaxRequest(): bool
+    {
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+        return isAjax()
+            || str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json')
+            || str_starts_with($path, '/api/');
     }
 }

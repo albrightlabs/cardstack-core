@@ -46,7 +46,15 @@ function jsonResponse(array $data, int $statusCode = 200): never
  */
 function jsonError(string $message, int $statusCode = 400): never
 {
-    jsonResponse(['error' => $message], $statusCode);
+    jsonResponse(['success' => false, 'error' => $message], $statusCode);
+}
+
+/**
+ * Send success JSON response
+ */
+function jsonSuccess(mixed $data = null, int $statusCode = 200): never
+{
+    jsonResponse(['success' => true, 'data' => $data], $statusCode);
 }
 
 /**

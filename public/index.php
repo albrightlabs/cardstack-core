@@ -37,10 +37,14 @@ switch (true) {
             Auth::init();
             if (!Auth::validateCsrf($_POST['csrf_token'] ?? null)) {
                 $error = 'Invalid security token. Please try again.';
-            } elseif (Auth::login($_POST['password'] ?? '')) {
-                redirect(baseUrl() . '/boards');
             } else {
-                $error = 'Invalid password';
+                $email = $_POST['email'] ?? '';
+                $password = $_POST['password'] ?? '';
+                if (Auth::login($email, $password)) {
+                    redirect(baseUrl() . '/boards');
+                } else {
+                    $error = 'Invalid email or password';
+                }
             }
         }
 
@@ -54,9 +58,18 @@ switch (true) {
         redirect(baseUrl() . '/login');
         break;
 
+    // User management page (admin only)
+    case $path === '/users':
+        Auth::requireAdmin();
+        $currentUser = Auth::getCurrentUser();
+        $branding = Config::getBranding();
+        require dirname(__DIR__) . '/templates/users.php';
+        break;
+
     // Boards list
     case $path === '/boards':
         Auth::requireAuth();
+        $currentUser = Auth::getCurrentUser();
         $boardModel = new Board();
         $boards = $boardModel->getAll();
         require dirname(__DIR__) . '/templates/boards.php';
@@ -65,6 +78,7 @@ switch (true) {
     // Single board view
     case preg_match('#^/board/([a-f0-9-]+)$#', $path, $matches) === 1:
         Auth::requireAuth();
+        $currentUser = Auth::getCurrentUser();
         $boardModel = new Board();
         $board = $boardModel->getById($matches[1]);
 

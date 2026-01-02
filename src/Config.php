@@ -47,8 +47,9 @@ class Config
             'COLOR_PRIMARY' => '#3b82f6',
             'COLOR_PRIMARY_HOVER' => '#2563eb',
 
-            // Security
-            'ADMIN_PASSWORD' => '',
+            // Security - Multi-User Auth
+            'SUPER_ADMIN_EMAIL' => '',
+            'SUPER_ADMIN_PASSWORD_HASH' => '',
 
             // Features
             'FEATURE_DARK_MODE' => 'true',

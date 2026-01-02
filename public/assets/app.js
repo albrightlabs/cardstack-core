@@ -222,5 +222,257 @@ const App = {
     }
 };
 
+/**
+ * User Menu functionality
+ */
+const UserMenu = {
+    init() {
+        const toggle = document.getElementById('userMenuToggle');
+        const dropdown = document.getElementById('userMenuDropdown');
+
+        if (!toggle || !dropdown) return;
+
+        toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('show');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!toggle.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                dropdown.classList.remove('show');
+            }
+        });
+    }
+};
+
+/**
+ * Users Page functionality
+ */
+const UsersPage = {
+    users: [],
+    editingUserId: null,
+    deletingUserId: null,
+
+    init() {
+        if (!window.USERS_PAGE) return;
+
+        this.bindEvents();
+        this.loadUsers();
+    },
+
+    bindEvents() {
+        // Add user button
+        document.getElementById('add-user-btn')?.addEventListener('click', () => this.openAddModal());
+
+        // User form submission
+        document.getElementById('user-form')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveUser();
+        });
+
+        // Confirm delete button
+        document.getElementById('confirm-delete-user')?.addEventListener('click', () => this.confirmDelete());
+
+        // Modal close buttons
+        document.querySelectorAll('[data-close]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const modalId = btn.dataset.close;
+                this.closeModal(modalId);
+            });
+        });
+
+        // Close modal on backdrop click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('show');
+                }
+            });
+        });
+
+        // Close modal on Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
+            }
+        });
+    },
+
+    async loadUsers() {
+        try {
+            const response = await App.api('/api/users');
+            this.users = response.data || [];
+            this.renderUsers();
+        } catch (error) {
+            App.toast('Failed to load users: ' + error.message, 'error');
+        }
+    },
+
+    renderUsers() {
+        const container = document.getElementById('users-list');
+        if (!container) return;
+
+        if (this.users.length === 0) {
+            container.innerHTML = '<p class="text-muted">No users found.</p>';
+            return;
+        }
+
+        container.innerHTML = this.users.map(user => `
+            <div class="user-card" data-user-id="${user.id}">
+                <div class="user-card-info">
+                    <span class="user-card-email">${this.escapeHtml(user.email)}</span>
+                    <div class="user-card-meta">
+                        <span class="role-badge role-${user.role}">${user.role === 'admin' ? 'Admin' : 'Read-Only'}</span>
+                        ${user.is_super_admin ? '<span class="super-admin-badge">Super Admin</span>' : ''}
+                    </div>
+                </div>
+                <div class="user-card-actions">
+                    ${!user.is_super_admin ? `
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="UsersPage.openEditModal('${user.id}')">Edit</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="UsersPage.openDeleteModal('${user.id}')">Delete</button>
+                    ` : '<span class="text-muted" style="font-size: 12px;">Protected</span>'}
+                </div>
+            </div>
+        `).join('');
+    },
+
+    openAddModal() {
+        this.editingUserId = null;
+        document.getElementById('user-modal-title').textContent = 'Add User';
+        document.getElementById('user-form').reset();
+        document.getElementById('user-id').value = '';
+        document.getElementById('user-password').required = true;
+        document.getElementById('password-help').textContent = 'Minimum 8 characters';
+        this.openModal('user-modal');
+    },
+
+    openEditModal(userId) {
+        const user = this.users.find(u => u.id === userId);
+        if (!user) return;
+
+        this.editingUserId = userId;
+        document.getElementById('user-modal-title').textContent = 'Edit User';
+        document.getElementById('user-id').value = user.id;
+        document.getElementById('user-email').value = user.email;
+        document.getElementById('user-password').value = '';
+        document.getElementById('user-password').required = false;
+        document.getElementById('password-help').textContent = 'Leave blank to keep current password';
+        document.getElementById('user-role').value = user.role;
+        this.openModal('user-modal');
+    },
+
+    openDeleteModal(userId) {
+        const user = this.users.find(u => u.id === userId);
+        if (!user) return;
+
+        this.deletingUserId = userId;
+        document.getElementById('delete-user-email').textContent = user.email;
+        this.openModal('delete-user-modal');
+    },
+
+    async saveUser() {
+        const form = document.getElementById('user-form');
+        const saveBtn = document.getElementById('user-save');
+        const email = document.getElementById('user-email').value.trim();
+        const password = document.getElementById('user-password').value;
+        const role = document.getElementById('user-role').value;
+
+        if (!email) {
+            App.toast('Email is required', 'error');
+            return;
+        }
+
+        if (!this.editingUserId && password.length < 8) {
+            App.toast('Password must be at least 8 characters', 'error');
+            return;
+        }
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
+        try {
+            const payload = { email, role };
+            if (password) payload.password = password;
+
+            if (this.editingUserId) {
+                await App.api(`/api/users/${this.editingUserId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(payload)
+                });
+                App.toast('User updated successfully', 'success');
+            } else {
+                await App.api('/api/users', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                App.toast('User created successfully', 'success');
+            }
+
+            this.closeModal('user-modal');
+            await this.loadUsers();
+        } catch (error) {
+            App.toast('Failed to save user: ' + error.message, 'error');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save';
+        }
+    },
+
+    async confirmDelete() {
+        if (!this.deletingUserId) return;
+
+        const deleteBtn = document.getElementById('confirm-delete-user');
+        deleteBtn.disabled = true;
+        deleteBtn.textContent = 'Deleting...';
+
+        try {
+            await App.api(`/api/users/${this.deletingUserId}`, {
+                method: 'DELETE'
+            });
+            App.toast('User deleted successfully', 'success');
+            this.closeModal('delete-user-modal');
+            await this.loadUsers();
+        } catch (error) {
+            App.toast('Failed to delete user: ' + error.message, 'error');
+        } finally {
+            deleteBtn.disabled = false;
+            deleteBtn.textContent = 'Delete';
+            this.deletingUserId = null;
+        }
+    },
+
+    openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('show');
+            const firstInput = modal.querySelector('input:not([type="hidden"])');
+            if (firstInput) setTimeout(() => firstInput.focus(), 100);
+        }
+    },
+
+    closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('show');
+        }
+    },
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+};
+
 // Initialize on DOM ready
-document.addEventListener('DOMContentLoaded', () => App.init());
+document.addEventListener('DOMContentLoaded', () => {
+    App.init();
+    UserMenu.init();
+    UsersPage.init();
+});
