@@ -319,7 +319,7 @@ const UsersPage = {
         if (!container) return;
 
         if (this.users.length === 0) {
-            container.innerHTML = '<p class="text-muted">No users found.</p>';
+            container.innerHTML = '<div class="empty-state">No users found</div>';
             return;
         }
 

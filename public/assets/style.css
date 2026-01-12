@@ -1985,6 +1985,11 @@ input, textarea {
     gap: var(--space-3);
 }
 
+.empty-state {
+    padding: 12px 0;
+    color: var(--text-muted);
+}
+
 .user-card {
     display: flex;
     align-items: center;
