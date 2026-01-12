@@ -20,6 +20,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 // Route handling
 switch (true) {
+    // API routes - delegate to api.php
+    case str_starts_with($path, '/api/'):
+        require __DIR__ . '/api.php';
+        break;
+
     // Home - redirect to boards
     case $path === '/':
         redirect(baseUrl() . '/boards');
@@ -35,7 +40,12 @@ switch (true) {
 
         if ($method === 'POST') {
             Auth::init();
-            if (!Auth::validateCsrf($_POST['csrf_token'] ?? null)) {
+            // Check rate limiting first
+            if (Auth::isRateLimited()) {
+                $remaining = Auth::getRateLimitRemainingTime();
+                $minutes = ceil($remaining / 60);
+                $error = "Too many failed attempts. Please try again in {$minutes} minute(s).";
+            } elseif (!Auth::validateCsrf($_POST['csrf_token'] ?? null)) {
                 $error = 'Invalid security token. Please try again.';
             } else {
                 $email = $_POST['email'] ?? '';
@@ -43,7 +53,14 @@ switch (true) {
                 if (Auth::login($email, $password)) {
                     redirect(baseUrl() . '/boards');
                 } else {
-                    $error = 'Invalid email or password';
+                    // Check if now rate limited after failed attempt
+                    if (Auth::isRateLimited()) {
+                        $remaining = Auth::getRateLimitRemainingTime();
+                        $minutes = ceil($remaining / 60);
+                        $error = "Too many failed attempts. Please try again in {$minutes} minute(s).";
+                    } else {
+                        $error = 'Invalid email or password';
+                    }
                 }
             }
         }

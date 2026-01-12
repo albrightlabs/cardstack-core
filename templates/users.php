@@ -29,10 +29,10 @@ ob_start();
 
 <!-- User Modal -->
 <div class="modal-overlay" id="user-modal">
-    <div class="modal modal-sm">
+    <div class="modal">
         <div class="modal-header">
             <h2 class="modal-title" id="user-modal-title">Add User</h2>
-            <button type="button" class="btn btn-icon modal-close" data-close="user-modal">
+            <button type="button" class="modal-close" data-close="user-modal">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -73,10 +73,10 @@ ob_start();
 
 <!-- Delete Confirmation Modal -->
 <div class="modal-overlay" id="delete-user-modal">
-    <div class="modal modal-sm">
+    <div class="modal">
         <div class="modal-header">
             <h2 class="modal-title">Delete User</h2>
-            <button type="button" class="btn btn-icon modal-close" data-close="delete-user-modal">
+            <button type="button" class="modal-close" data-close="delete-user-modal">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>

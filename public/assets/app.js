@@ -227,8 +227,8 @@ const App = {
  */
 const UserMenu = {
     init() {
-        const toggle = document.getElementById('userMenuToggle');
-        const dropdown = document.getElementById('userMenuDropdown');
+        const toggle = document.getElementById('user-menu-toggle');
+        const dropdown = document.getElementById('user-menu-dropdown');
 
         if (!toggle || !dropdown) return;
 

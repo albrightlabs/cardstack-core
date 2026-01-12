@@ -33,7 +33,7 @@
     --success-bg: #ecfdf5;
     --success-text: #065f46;
     --warning: #d97706;
-    --danger: #dc2626;
+    --danger-color: #dc2626;
     --danger-hover: #b91c1c;
     --danger-bg: #fef2f2;
     --danger-text: #991b1b;
@@ -62,11 +62,14 @@
     --space-10: 48px;
     --space-11: 60px;
 
-    /* Border radius */
+    /* Border radius - matches TodoStack/DocStack */
     --radius-sm: 4px;
-    --radius-md: 6px;
-    --radius-lg: 8px;
-    --radius-xl: 12px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    /* Transitions - matches TodoStack */
+    --transition-fast: 150ms ease;
+    --transition-normal: 200ms ease;
 
     /* Layout */
     --header-height: 56px;
@@ -121,7 +124,7 @@
 
 html {
     font-size: 16px;
-    line-height: 1.6;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -284,9 +287,9 @@ input, textarea {
 }
 
 .btn-danger {
-    background-color: var(--danger);
+    background-color: var(--danger-color);
     color: white;
-    border-color: var(--danger);
+    border-color: var(--danger-color);
 }
 
 .btn-danger:hover:not(:disabled) {
@@ -676,7 +679,7 @@ input, textarea {
 }
 
 .column-menu-item.delete-column {
-    color: var(--danger);
+    color: var(--danger-color);
 }
 
 .column-menu-item.delete-column:hover {
@@ -768,7 +771,7 @@ input, textarea {
 
 .card-badge-due.overdue {
     color: white;
-    background-color: var(--danger);
+    background-color: var(--danger-color);
     padding: 2px var(--space-2);
     border-radius: var(--radius-sm);
 }
@@ -893,17 +896,17 @@ input, textarea {
     position: fixed;
     inset: 0;
     z-index: 1000;
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
+    background: rgba(0, 0, 0, 0.5);
     opacity: 0;
     visibility: hidden;
-    transition: all 0.2s ease;
+    transition: all var(--transition-normal);
 }
 
 .modal.show {
-    display: flex;
     opacity: 1;
     visibility: visible;
 }
@@ -1101,13 +1104,13 @@ input, textarea {
 
 .btn-sidebar.btn-danger {
     background-color: var(--bg-secondary);
-    color: var(--danger);
+    color: var(--danger-color);
     border-color: var(--border-color);
 }
 
 .btn-sidebar.btn-danger:hover {
     background-color: var(--danger-bg);
-    border-color: var(--danger);
+    border-color: var(--danger-color);
 }
 
 /* ============================================
@@ -1269,17 +1272,16 @@ input, textarea {
     position: fixed;
     inset: 0;
     z-index: 1000;
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.2s ease;
+    transition: all var(--transition-normal);
 }
 
 .board-menu-modal.show {
-    display: flex;
     opacity: 1;
     visibility: visible;
 }
@@ -1426,11 +1428,11 @@ input, textarea {
 }
 
 .board-menu-item-danger {
-    color: var(--danger);
+    color: var(--danger-color);
 }
 
 .board-menu-item-danger svg {
-    color: var(--danger);
+    color: var(--danger-color);
 }
 
 .board-menu-item-danger:hover {
@@ -1444,12 +1446,15 @@ input, textarea {
     margin-bottom: var(--space-5);
 }
 
-.form-group label {
+.form-group label,
+.form-label {
     display: block;
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 0.75rem;
+    font-weight: 600;
     color: var(--text-secondary);
-    margin-bottom: var(--space-2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
 }
 
 .form-control {
@@ -1517,7 +1522,7 @@ input, textarea {
 .alert-danger {
     background-color: var(--danger-bg);
     color: var(--danger-text);
-    border: 1px solid var(--danger);
+    border: 1px solid var(--danger-color);
 }
 
 /* Toast / Flash Messages */
@@ -1559,7 +1564,7 @@ input, textarea {
 
 .toast.error,
 .flash-error {
-    border-color: var(--danger);
+    border-color: var(--danger-color);
     background-color: var(--danger-bg);
     color: var(--danger-text);
 }
@@ -1840,50 +1845,29 @@ input, textarea {
 .user-menu-toggle {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    color: var(--header-text);
-    font-size: 13px;
+    color: var(--text-secondary);
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition: all 0.15s ease;
 }
 
 .user-menu-toggle:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.user-menu-email {
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.user-menu-role {
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 9999px;
-    font-weight: 500;
-}
-
-.role-badge.role-admin {
-    background: #059669;
-    color: white;
-}
-
-.role-badge.role-readonly {
-    background: #6b7280;
-    color: white;
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--border-dark);
 }
 
 .user-menu-dropdown {
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    min-width: 180px;
+    min-width: 200px;
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
@@ -1901,27 +1885,44 @@ input, textarea {
     transform: translateY(0);
 }
 
+.user-menu-info {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.user-menu-email {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    word-break: break-all;
+}
+
+.user-menu-role {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+}
+
+.user-menu-role.role-admin {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-color);
+}
+
 .user-menu-item {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 14px;
+    padding: 10px 16px;
     color: var(--text-primary);
     text-decoration: none;
     font-size: 14px;
     transition: background-color 0.15s ease;
-}
-
-.user-menu-item:first-child {
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-
-.user-menu-item:last-child {
-    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-}
-
-.user-menu-item:only-child {
-    border-radius: var(--radius-lg);
 }
 
 .user-menu-item:hover {
@@ -1936,16 +1937,16 @@ input, textarea {
 }
 
 .user-menu-item-danger {
-    color: var(--danger);
+    color: var(--danger-color);
 }
 
 .user-menu-item-danger svg {
-    color: var(--danger);
+    color: var(--danger-color);
 }
 
 .user-menu-item-danger:hover {
     background: var(--danger-bg);
-    color: var(--danger);
+    color: var(--danger-color);
 }
 
 /* ============================================
@@ -2024,6 +2025,35 @@ input, textarea {
     gap: var(--space-2);
 }
 
+.role-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-weight: 500;
+}
+
+.role-admin {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.role-readonly {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+@media (prefers-color-scheme: dark) {
+    .role-admin {
+        background: #1e3a5f;
+        color: #60a5fa;
+    }
+
+    .role-readonly {
+        background: #374151;
+        color: #9ca3af;
+    }
+}
+
 .super-admin-badge {
     font-size: 11px;
     padding: 2px 8px;
@@ -2038,18 +2068,17 @@ input, textarea {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.5);
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
     z-index: 1100;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.2s ease;
+    transition: all var(--transition-normal);
 }
 
 .modal-overlay.show {
-    display: flex;
     opacity: 1;
     visibility: visible;
 }
@@ -2061,11 +2090,17 @@ input, textarea {
     width: 100%;
     max-width: 400px;
     max-height: 90vh;
+    margin: 20px;
+    padding: 0;
     background: var(--bg-primary);
-    border-radius: var(--radius-lg);
+    border-radius: 12px;
     box-shadow: var(--shadow-modal);
     transform: translateY(20px);
     transition: transform 0.2s ease;
+    /* Override base .modal hidden styles */
+    opacity: 1;
+    visibility: visible;
+    inset: auto;
 }
 
 .modal-overlay.show .modal {
@@ -2076,8 +2111,10 @@ input, textarea {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    width: 100%;
     padding: 16px 20px;
     border-bottom: 1px solid var(--border-color);
+    box-sizing: border-box;
 }
 
 .modal-overlay .modal-title {
@@ -2088,8 +2125,10 @@ input, textarea {
 }
 
 .modal-overlay .modal-body {
+    width: 100%;
     padding: 20px;
     overflow-y: auto;
+    box-sizing: border-box;
 }
 
 .modal-overlay .modal-actions {
@@ -2099,39 +2138,64 @@ input, textarea {
     margin-top: var(--space-5);
 }
 
-/* Form styles for users page */
-.form-label {
-    display: block;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin-bottom: var(--space-2);
+.modal-overlay .modal-close {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.form-input,
-.form-select {
+.modal-overlay .modal-close:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.modal-overlay .form-group {
+    margin-bottom: 16px;
+}
+
+.modal-overlay .form-group:last-of-type {
+    margin-bottom: 0;
+}
+
+/* Form styles for users page */
+.modal-overlay .form-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.modal-overlay .form-input,
+.modal-overlay .form-select {
     width: 100%;
     padding: 10px 12px;
-    font-size: 14px;
+    font-size: 0.9rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: var(--bg-primary);
+    background: var(--bg-secondary);
     color: var(--text-primary);
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    box-sizing: border-box;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.form-input:focus,
-.form-select:focus {
+.modal-overlay .form-input:focus,
+.modal-overlay .form-select:focus {
     outline: none;
     border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
 }
 
-.form-help {
+.modal-overlay .form-help {
     display: block;
     font-size: 12px;
     color: var(--text-muted);
-    margin-top: var(--space-1);
+    margin-top: 4px;
 }
 
 .text-muted {
@@ -2155,4 +2219,36 @@ input, textarea {
         width: 100%;
         justify-content: flex-end;
     }
+}
+
+/* ============================================
+   Focus States for Accessibility - matches TodoStack
+   ============================================ */
+.btn:focus-visible,
+.form-control:focus-visible,
+.form-input:focus-visible,
+.form-select:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   Scrollbar Styling - matches TodoStack
+   ============================================ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
 }

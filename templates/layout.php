@@ -56,17 +56,18 @@ $flash = getFlash();
             </div>
             <div class="header-right">
                 <?php if (Auth::check()): ?>
-                <div class="user-menu">
-                    <button type="button" class="user-menu-toggle" id="userMenuToggle">
-                        <span class="user-menu-email"><?= e($currentUser['email'] ?? '') ?></span>
-                        <span class="user-menu-role role-badge role-<?= e($currentUser['role'] ?? 'admin') ?>">
-                            <?= ($currentUser['role'] ?? 'admin') === 'admin' ? 'Admin' : 'Read-Only' ?>
-                        </span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
+                <div class="user-menu" id="user-menu">
+                    <button type="button" class="user-menu-toggle" id="user-menu-toggle">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
                         </svg>
                     </button>
-                    <div class="user-menu-dropdown" id="userMenuDropdown">
+                    <div class="user-menu-dropdown" id="user-menu-dropdown">
+                        <div class="user-menu-info">
+                            <span class="user-menu-email"><?= e($currentUser['email'] ?? '') ?></span>
+                            <span class="user-menu-role role-<?= e($currentUser['role'] ?? 'readonly') ?>"><?= ($currentUser['role'] ?? 'admin') === 'admin' ? 'Admin' : 'Read-Only' ?></span>
+                        </div>
                         <?php if (Auth::isAdmin()): ?>
                         <a href="<?= baseUrl() ?>/users" class="user-menu-item">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -84,7 +85,7 @@ $flash = getFlash();
                                 <polyline points="16 17 21 12 16 7"></polyline>
                                 <line x1="21" y1="12" x2="9" y2="12"></line>
                             </svg>
-                            Logout
+                            Sign Out
                         </a>
                     </div>
                 </div>
