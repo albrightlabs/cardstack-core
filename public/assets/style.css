@@ -313,13 +313,13 @@ input, textarea {
 }
 
 .btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
+    padding: 6px 12px;
+    font-size: 13px;
 }
 
 .btn-sm svg {
-    width: 0.875rem;
-    height: 0.875rem;
+    width: 14px;
+    height: 14px;
 }
 
 /* Ghost button - subtle, nearly invisible until hovered */
@@ -2140,7 +2140,7 @@ input, textarea {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    margin-top: var(--space-5);
+    margin-top: 20px;
 }
 
 .modal-overlay .modal-close {
