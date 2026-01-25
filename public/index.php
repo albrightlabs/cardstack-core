@@ -18,11 +18,64 @@ $path = parse_url($uri, PHP_URL_PATH);
 $path = rtrim($path, '/') ?: '/';
 $method = $_SERVER['REQUEST_METHOD'];
 
+// Check if setup is needed (no users exist)
+if (!Auth::hasAnyUsers() && $path !== '/setup' && !str_starts_with($path, '/api/')) {
+    redirect(baseUrl() . '/setup');
+}
+
 // Route handling
 switch (true) {
     // API routes - delegate to api.php
     case str_starts_with($path, '/api/'):
         require __DIR__ . '/api.php';
+        break;
+
+    // Setup page (first-time installation)
+    case $path === '/setup':
+        // If users already exist, redirect to login
+        if (Auth::hasAnyUsers()) {
+            redirect(baseUrl() . '/login');
+        }
+
+        $error = null;
+
+        if ($method === 'POST') {
+            Auth::init();
+            if (!Auth::validateCsrf($_POST['csrf_token'] ?? null)) {
+                $error = 'Invalid security token. Please try again.';
+            } else {
+                $name = trim($_POST['name'] ?? '');
+                $email = trim($_POST['email'] ?? '');
+                $password = $_POST['password'] ?? '';
+                $passwordConfirm = $_POST['password_confirm'] ?? '';
+
+                // Validate inputs
+                if (empty($name)) {
+                    $error = 'Name is required.';
+                } elseif (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $error = 'A valid email address is required.';
+                } elseif (strlen($password) < 8) {
+                    $error = 'Password must be at least 8 characters.';
+                } elseif ($password !== $passwordConfirm) {
+                    $error = 'Passwords do not match.';
+                } else {
+                    // Create the first user as super admin
+                    try {
+                        $userManager = Auth::getUserManager();
+                        $userManager->create($name, $email, $password, 'admin', true);
+
+                        // Auto-login the new user
+                        Auth::login($email, $password);
+
+                        redirect(baseUrl() . '/boards');
+                    } catch (\Exception $e) {
+                        $error = $e->getMessage();
+                    }
+                }
+            }
+        }
+
+        require dirname(__DIR__) . '/templates/setup.php';
         break;
 
     // Home - redirect to boards

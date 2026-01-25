@@ -326,6 +326,7 @@ const UsersPage = {
         container.innerHTML = this.users.map(user => `
             <div class="user-card" data-user-id="${user.id}">
                 <div class="user-card-info">
+                    <span class="user-card-name">${this.escapeHtml(user.name || '')}</span>
                     <span class="user-card-email">${this.escapeHtml(user.email)}</span>
                     <div class="user-card-meta">
                         <span class="role-badge role-${user.role}">${user.role === 'admin' ? 'Admin' : 'Read-Only'}</span>
@@ -348,7 +349,9 @@ const UsersPage = {
         document.getElementById('user-form').reset();
         document.getElementById('user-id').value = '';
         document.getElementById('user-password').required = true;
+        document.getElementById('user-password-confirm').required = true;
         document.getElementById('password-help').textContent = 'Minimum 8 characters';
+        document.getElementById('password-match-error').style.display = 'none';
         this.openModal('user-modal');
     },
 
@@ -359,10 +362,14 @@ const UsersPage = {
         this.editingUserId = userId;
         document.getElementById('user-modal-title').textContent = 'Edit User';
         document.getElementById('user-id').value = user.id;
+        document.getElementById('user-name').value = user.name || '';
         document.getElementById('user-email').value = user.email;
         document.getElementById('user-password').value = '';
+        document.getElementById('user-password-confirm').value = '';
         document.getElementById('user-password').required = false;
+        document.getElementById('user-password-confirm').required = false;
         document.getElementById('password-help').textContent = 'Leave blank to keep current password';
+        document.getElementById('password-match-error').style.display = 'none';
         document.getElementById('user-role').value = user.role;
         this.openModal('user-modal');
     },
@@ -372,16 +379,24 @@ const UsersPage = {
         if (!user) return;
 
         this.deletingUserId = userId;
-        document.getElementById('delete-user-email').textContent = user.email;
+        document.getElementById('delete-user-name').textContent = user.name || user.email;
         this.openModal('delete-user-modal');
     },
 
     async saveUser() {
         const form = document.getElementById('user-form');
         const saveBtn = document.getElementById('user-save');
+        const name = document.getElementById('user-name').value.trim();
         const email = document.getElementById('user-email').value.trim();
         const password = document.getElementById('user-password').value;
+        const passwordConfirm = document.getElementById('user-password-confirm').value;
         const role = document.getElementById('user-role').value;
+        const passwordMatchError = document.getElementById('password-match-error');
+
+        if (!name) {
+            App.toast('Name is required', 'error');
+            return;
+        }
 
         if (!email) {
             App.toast('Email is required', 'error');
@@ -393,11 +408,18 @@ const UsersPage = {
             return;
         }
 
+        // Validate password confirmation
+        if (password && password !== passwordConfirm) {
+            passwordMatchError.style.display = 'block';
+            return;
+        }
+        passwordMatchError.style.display = 'none';
+
         saveBtn.disabled = true;
         saveBtn.textContent = 'Saving...';
 
         try {
-            const payload = { email, role };
+            const payload = { name, email, role };
             if (password) payload.password = password;
 
             if (this.editingUserId) {

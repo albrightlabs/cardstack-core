@@ -44,6 +44,11 @@ ob_start();
                 <input type="hidden" id="user-id" name="id">
 
                 <div class="form-group">
+                    <label class="form-label" for="user-name">Name</label>
+                    <input type="text" class="form-input" id="user-name" name="name" required>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label" for="user-email">Email</label>
                     <input type="email" class="form-input" id="user-email" name="email" required>
                 </div>
@@ -52,6 +57,12 @@ ob_start();
                     <label class="form-label" for="user-password">Password</label>
                     <input type="password" class="form-input" id="user-password" name="password" minlength="8">
                     <small class="form-help" id="password-help">Minimum 8 characters</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="user-password-confirm">Confirm Password</label>
+                    <input type="password" class="form-input" id="user-password-confirm" name="password_confirm" minlength="8">
+                    <small class="form-help text-danger" id="password-match-error" style="display: none;">Passwords do not match</small>
                 </div>
 
                 <div class="form-group">
@@ -84,7 +95,7 @@ ob_start();
             </button>
         </div>
         <div class="modal-body">
-            <p>Are you sure you want to delete <strong id="delete-user-email"></strong>?</p>
+            <p>Are you sure you want to delete <strong id="delete-user-name"></strong>?</p>
             <p class="text-muted">This action cannot be undone.</p>
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" data-close="delete-user-modal">Cancel</button>
