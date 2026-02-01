@@ -54,6 +54,11 @@ class Config
             // Features
             'FEATURE_DARK_MODE' => 'true',
 
+            // Visibility
+            // 'public' = anyone with link can view boards (login optional)
+            // 'private' = login required to view any boards
+            'WORKSPACE_VISIBILITY' => 'private',
+
             // Storage
             'DATA_PATH' => './data',
         ];
@@ -143,6 +148,15 @@ class Config
     public static function getBoardsPath(): string
     {
         return self::getDataPath() . '/boards';
+    }
+
+    /**
+     * Check if workspace is public (no login required for viewing)
+     */
+    public static function isWorkspacePublic(): bool
+    {
+        $visibility = strtolower(self::get('WORKSPACE_VISIBILITY', 'private'));
+        return $visibility === 'public';
     }
 
     /**

@@ -9,9 +9,12 @@ A flat-file kanban board framework built with PHP 8.1+, vanilla JavaScript, and 
 - **Labels & due dates** — Categorize and track deadlines
 - **Column emojis** — Add visual identifiers to columns
 - **Board colors** — Customize board background colors
+- **Public share links** — Share boards publicly with unique URLs (read-only)
 - **Dark/light mode** — Automatic based on system preference
 - **Responsive design** — Works on desktop and mobile
-- **Admin authentication** — Secure access to board management
+- **Multi-user authentication** — Role-based access with admin and read-only roles
+- **Board-level permissions** — Control which users can access specific boards
+- **Workspace visibility** — Make workspace public or require login
 - **Environment configuration** — All settings via `.env` file
 - **Flat-file storage** — No database required, JSON files only
 
@@ -176,6 +179,37 @@ cardstack-core/
 | `PUT` | `/api/cards/:id` | Update a card |
 | `DELETE` | `/api/cards/:id` | Delete a card |
 | `PUT` | `/api/cards/:id/move` | Move a card |
+| `GET` | `/api/boards/:id/share` | Get share status |
+| `POST` | `/api/boards/:id/share` | Enable sharing |
+| `DELETE` | `/api/boards/:id/share` | Disable sharing |
+| `POST` | `/api/boards/:id/share/regenerate` | Regenerate share token |
+| `GET` | `/api/share/:token` | Get shared board (public) |
+
+## Public Share Links
+
+CardStack supports Trello-style public share links. When sharing is enabled, anyone with the link can view a board in read-only mode without needing to log in.
+
+### How it works
+
+1. Open a board and click the menu button (⋮)
+2. Click "Share Board" to open the share modal
+3. Toggle "Enable public link" to generate a share URL
+4. Copy and share the link (e.g., `https://boards.example.com/s/abc123def456`)
+
+### Share link features
+
+- **Read-only access** — Viewers cannot edit, drag, or modify anything
+- **No login required** — Anyone with the link can view
+- **Regenerate links** — Invalidate old links by generating a new token
+- **Disable anytime** — Turn off sharing to make the board private again
+
+### URL format
+
+Share links use the format `/s/{token}` where the token is a 12-character cryptographically secure string.
+
+## Production Deployment
+
+For detailed deployment instructions including Laravel Forge setup and data persistence strategies, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Security
 

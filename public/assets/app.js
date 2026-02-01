@@ -219,6 +219,123 @@ const App = {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
+    },
+
+    // =========================================================================
+    // Cleanup Uploads
+    // =========================================================================
+
+    showCleanupModal() {
+        fetch('/api/cleanup-uploads', {
+            headers: {
+                'X-CSRF-TOKEN': this.getCsrfToken()
+            }
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    this.displayCleanupModal(data.data);
+                } else {
+                    this.toast('Failed to analyze uploads: ' + (data.error || 'Unknown error'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Cleanup error:', error);
+                this.toast('Failed to analyze uploads: ' + error.message, 'error');
+            });
+    },
+
+    displayCleanupModal(data) {
+        let overlay = document.getElementById('cleanup-modal-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'cleanup-modal-overlay';
+            overlay.className = 'modal-overlay';
+            overlay.innerHTML =
+                '<div class="modal">' +
+                    '<div class="modal-header">' +
+                        '<h3 class="modal-title">Clean Up Uploads</h3>' +
+                        '<button type="button" class="btn btn-icon modal-close" onclick="App.closeCleanupModal()">' +
+                            '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                                '<line x1="18" y1="6" x2="6" y2="18"></line>' +
+                                '<line x1="6" y1="6" x2="18" y2="18"></line>' +
+                            '</svg>' +
+                        '</button>' +
+                    '</div>' +
+                    '<div class="modal-body" id="cleanup-modal-body"></div>' +
+                '</div>';
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) this.closeCleanupModal();
+            });
+        }
+
+        const body = document.getElementById('cleanup-modal-body');
+
+        if (data.orphaned_count === 0) {
+            body.innerHTML =
+                '<div class="cleanup-summary">' +
+                    '<p><strong>No unused files found.</strong></p>' +
+                    '<p class="text-muted">All ' + data.total_files + ' uploaded files are referenced in your content.</p>' +
+                '</div>' +
+                '<div class="modal-actions">' +
+                    '<button type="button" class="btn btn-secondary" onclick="App.closeCleanupModal()">Close</button>' +
+                '</div>';
+        } else {
+            const fileList = data.orphaned_files.map(f => '<li>' + this.escapeHtml(f) + '</li>').join('');
+            body.innerHTML =
+                '<div class="cleanup-summary">' +
+                    '<p><strong>' + data.orphaned_count + ' unused file' + (data.orphaned_count !== 1 ? 's' : '') + ' found</strong></p>' +
+                    '<p class="text-muted">These files are in the uploads folder but not referenced in any content:</p>' +
+                    '<ul class="cleanup-file-list">' + fileList + '</ul>' +
+                    '<p class="cleanup-stats">' +
+                        'Total uploads: ' + data.total_files + ' &bull; ' +
+                        'Referenced: ' + data.referenced_files + ' &bull; ' +
+                        'Orphaned: ' + data.orphaned_count +
+                    '</p>' +
+                '</div>' +
+                '<div class="modal-actions">' +
+                    '<button type="button" class="btn btn-secondary" onclick="App.closeCleanupModal()">Cancel</button>' +
+                    '<button type="button" class="btn btn-danger" onclick="App.executeCleanup()">Delete ' + data.orphaned_count + ' File' + (data.orphaned_count !== 1 ? 's' : '') + '</button>' +
+                '</div>';
+        }
+
+        overlay.classList.add('show');
+    },
+
+    closeCleanupModal() {
+        const overlay = document.getElementById('cleanup-modal-overlay');
+        if (overlay) overlay.classList.remove('show');
+    },
+
+    executeCleanup() {
+        fetch('/api/cleanup-uploads', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': this.getCsrfToken()
+            }
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    this.closeCleanupModal();
+                    const count = data.data.deleted_count || 0;
+                    this.toast('Successfully deleted ' + count + ' file' + (count !== 1 ? 's' : '') + '.', 'success');
+                } else {
+                    this.toast('Cleanup failed: ' + (data.error || 'Unknown error'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Cleanup error:', error);
+                this.toast('Cleanup failed: ' + error.message, 'error');
+            });
     }
 };
 
@@ -248,6 +365,17 @@ const UserMenu = {
                 dropdown.classList.remove('show');
             }
         });
+
+        // Cleanup uploads button
+        const cleanupBtn = document.getElementById('cleanup-uploads-btn');
+        if (cleanupBtn) {
+            cleanupBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropdown.classList.remove('show');
+                App.showCleanupModal();
+            });
+        }
     }
 };
 
@@ -335,6 +463,7 @@ const UsersPage = {
                 </div>
                 <div class="user-card-actions">
                     ${!user.is_super_admin ? `
+                        <a href="/users/${user.id}/edit" class="btn btn-ghost btn-sm">Permissions</a>
                         <button type="button" class="btn btn-secondary btn-sm" onclick="UsersPage.openEditModal('${user.id}')">Edit</button>
                         <button type="button" class="btn btn-danger btn-sm" onclick="UsersPage.openDeleteModal('${user.id}')">Delete</button>
                     ` : '<span class="text-muted" style="font-size: 12px;">Protected</span>'}

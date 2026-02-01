@@ -5,22 +5,39 @@ $title = $board['title'] ?? 'Board';
 $bodyClass = 'board-page';
 $scripts = ['board.js'];
 $boardColor = $board['color'] ?? '#0d6efd';
+$isSharedView = $isSharedView ?? false;
 
 ob_start();
 ?>
 
-<div class="board-wrapper" style="--board-color: <?= e($boardColor) ?>">
+<?php if ($isSharedView): ?>
+<div class="shared-view-banner">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+    </svg>
+    <span>Viewing shared board (read-only)</span>
+    <?php if (!$currentUser): ?>
+    <a href="<?= baseUrl() ?>/login" class="shared-view-login">Sign in to edit</a>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
+
+<div class="board-wrapper<?= $isSharedView ? ' shared-view' : '' ?>" style="--board-color: <?= e($boardColor) ?>">
     <div class="board-header">
         <div class="board-header-left">
-            <h1 class="board-title" contenteditable="true" data-board-id="<?= e($board['id']) ?>"
+            <h1 class="board-title" <?= !$isSharedView ? 'contenteditable="true"' : '' ?> data-board-id="<?= e($board['id']) ?>"
                 spellcheck="false"><?= e($board['title']) ?></h1>
+            <?php if (!$isSharedView): ?>
             <button type="button" class="btn btn-icon btn-star" title="Star board">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                 </svg>
             </button>
+            <?php endif; ?>
         </div>
         <div class="board-header-right">
+            <?php if (!$isSharedView): ?>
             <button type="button" class="btn btn-icon btn-board-menu" title="Board menu" id="boardMenuBtn">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="1"></circle>
@@ -28,13 +45,15 @@ ob_start();
                     <circle cx="12" cy="19" r="1"></circle>
                 </svg>
             </button>
+            <?php endif; ?>
         </div>
     </div>
 
     <div class="board-columns" id="boardColumns" data-board-id="<?= e($board['id']) ?>">
         <?php foreach ($board['columns'] ?? [] as $column): ?>
-        <div class="board-column" data-column-id="<?= e($column['id']) ?>" data-column-emoji="<?= e($column['emoji'] ?? '') ?>" draggable="true">
+        <div class="board-column" data-column-id="<?= e($column['id']) ?>" data-column-emoji="<?= e($column['emoji'] ?? '') ?>" <?= !$isSharedView ? 'draggable="true"' : '' ?>>
             <div class="column-header">
+                <?php if (!$isSharedView): ?>
                 <button type="button" class="btn-column-emoji" title="Add emoji">
                     <?php if (!empty($column['emoji'])): ?>
                         <span class="column-emoji"><?= $column['emoji'] ?></span>
@@ -49,7 +68,11 @@ ob_start();
                         </span>
                     <?php endif; ?>
                 </button>
-                <h3 class="column-title" contenteditable="true" spellcheck="false"><?= e($column['title']) ?></h3>
+                <?php elseif (!empty($column['emoji'])): ?>
+                <span class="column-emoji-display"><?= $column['emoji'] ?></span>
+                <?php endif; ?>
+                <h3 class="column-title" <?= !$isSharedView ? 'contenteditable="true"' : '' ?> spellcheck="false"><?= e($column['title']) ?></h3>
+                <?php if (!$isSharedView): ?>
                 <button type="button" class="btn btn-icon column-menu-btn" title="Column actions">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="1"></circle>
@@ -62,10 +85,16 @@ ob_start();
                         Delete Column
                     </button>
                 </div>
+                <?php endif; ?>
             </div>
             <div class="card-list" data-column-id="<?= e($column['id']) ?>">
                 <?php foreach ($column['cards'] ?? [] as $card): ?>
-                <div class="card" data-card-id="<?= e($card['id']) ?>" draggable="true">
+                <div class="card" data-card-id="<?= e($card['id']) ?>" <?= !$isSharedView ? 'draggable="true"' : '' ?>>
+                    <?php if (!empty($card['coverImage'])): ?>
+                    <div class="card-cover">
+                        <img src="<?= e($card['coverImage']) ?>" alt="" loading="lazy">
+                    </div>
+                    <?php endif; ?>
                     <?php if (!empty($card['labels'])): ?>
                     <div class="card-labels">
                         <?php foreach ($card['labels'] as $label): ?>
@@ -95,10 +124,19 @@ ob_start();
                             <?= e(date('M j', strtotime($card['dueDate']))) ?>
                         </span>
                         <?php endif; ?>
+                        <?php if (!empty($card['attachments'])): ?>
+                        <span class="card-badge" title="<?= count($card['attachments']) ?> attachment(s)">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                            </svg>
+                            <?= count($card['attachments']) ?>
+                        </span>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <?php endforeach; ?>
             </div>
+            <?php if (!$isSharedView): ?>
             <div class="add-card-wrapper">
                 <button type="button" class="btn btn-add-card">
                     <span class="btn-icon">+</span> Add a card
@@ -116,9 +154,11 @@ ob_start();
                     </div>
                 </form>
             </div>
+            <?php endif; ?>
         </div>
         <?php endforeach; ?>
 
+        <?php if (!$isSharedView): ?>
         <div class="add-column-wrapper">
             <button type="button" class="btn btn-add-column" id="addColumnBtn">
                 <span class="btn-icon">+</span> Add column
@@ -136,6 +176,7 @@ ob_start();
                 </div>
             </form>
         </div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -146,7 +187,7 @@ ob_start();
         <div class="modal-content">
             <div class="modal-header">
                 <div class="card-modal-title-wrapper">
-                    <textarea class="card-modal-title" id="cardModalTitle" rows="1" spellcheck="false"></textarea>
+                    <textarea class="card-modal-title" id="cardModalTitle" rows="1" spellcheck="false" <?= $isSharedView ? 'readonly' : '' ?>></textarea>
                 </div>
                 <button type="button" class="modal-close" data-dismiss="modal">&times;</button>
             </div>
@@ -163,9 +204,19 @@ ob_start();
                             Description
                         </h4>
                         <textarea class="card-description" id="cardDescription"
-                                  placeholder="Add a more detailed description..."></textarea>
+                                  placeholder="<?= $isSharedView ? 'No description' : 'Add a more detailed description...' ?>" <?= $isSharedView ? 'readonly' : '' ?>></textarea>
+                    </div>
+                    <div class="card-modal-section card-attachments-section" id="cardAttachmentsSection" style="display: none;">
+                        <h4 class="card-modal-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                            </svg>
+                            Attachments
+                        </h4>
+                        <div class="attachments-list" id="attachmentsList"></div>
                     </div>
                 </div>
+                <?php if (!$isSharedView): ?>
                 <div class="card-modal-sidebar">
                     <h4 class="sidebar-title">Add to card</h4>
                     <button type="button" class="btn btn-sidebar" id="addLabelsBtn">
@@ -182,6 +233,20 @@ ob_start();
                         </svg>
                         Due Date
                     </button>
+                    <button type="button" class="btn btn-sidebar" id="addCoverBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        Cover
+                    </button>
+                    <button type="button" class="btn btn-sidebar" id="addAttachmentBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                        </svg>
+                        Attachment
+                    </button>
 
                     <h4 class="sidebar-title">Actions</h4>
                     <button type="button" class="btn btn-sidebar btn-danger" id="deleteCardBtn">
@@ -192,11 +257,13 @@ ob_start();
                         Delete Card
                     </button>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 </div>
 
+<?php if (!$isSharedView): ?>
 <!-- Labels Popover -->
 <div class="popover" id="labelsPopover">
     <div class="popover-header">
@@ -247,6 +314,25 @@ ob_start();
         </div>
     </div>
 </div>
+
+<!-- Cover Popover -->
+<div class="popover" id="coverPopover">
+    <div class="popover-header">
+        <h5>Cover</h5>
+        <button type="button" class="popover-close">&times;</button>
+    </div>
+    <div class="popover-body">
+        <div class="cover-attachments-list" id="coverAttachmentsList">
+            <p class="cover-no-images">No image attachments available</p>
+        </div>
+        <div class="popover-actions">
+            <button type="button" class="btn btn-secondary btn-sm" id="removeCover">Remove Cover</button>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden file input for attachments -->
+<input type="file" id="attachmentFileInput" hidden multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip">
 
 <!-- Emoji Picker Popover -->
 <div class="popover emoji-picker-popover" id="emojiPickerPopover">
@@ -338,6 +424,18 @@ ob_start();
                 </div>
             </div>
             <div class="board-menu-section">
+                <button type="button" class="btn btn-secondary btn-block" id="shareBoardBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                    Share Board
+                </button>
+            </div>
+            <div class="board-menu-section">
                 <button type="button" class="btn btn-danger btn-block" id="deleteBoardBtn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6"></polyline>
@@ -350,8 +448,47 @@ ob_start();
     </div>
 </div>
 
+<!-- Share Board Modal -->
+<div class="modal" id="shareBoardModal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Share Board</h2>
+                <button type="button" class="modal-close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="share-toggle-row">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="shareEnabled">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="share-toggle-label">Enable public link</span>
+                </div>
+                <div class="share-link-section" id="shareLinkSection" style="display: none;">
+                    <div class="share-link-input-group">
+                        <input type="text" id="shareLinkUrl" class="form-control" readonly>
+                        <button type="button" class="btn btn-primary" id="copyShareLink">Copy</button>
+                    </div>
+                    <button type="button" class="btn btn-ghost btn-sm" id="regenerateShareLink">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        Regenerate link
+                    </button>
+                    <p class="share-note">Anyone with this link can view the board (read-only)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <script>
     window.boardData = <?= json_encode($board, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+    window.isSharedView = <?= json_encode($isSharedView) ?>;
 </script>
 
 <?php

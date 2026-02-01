@@ -6,6 +6,7 @@ const BoardApp = {
     state: {
         board: null,
         currentCard: null,
+        currentCardAttachments: [],
         draggedItem: null,
         dragType: null, // 'card' or 'column'
         siteName: null // extracted from initial page title
@@ -16,6 +17,7 @@ const BoardApp = {
      */
     init() {
         this.state.board = window.boardData || null;
+        this.state.isSharedView = window.isSharedView || false;
 
         if (!this.state.board) {
             console.error('Board data not found');
@@ -26,6 +28,15 @@ const BoardApp = {
         const titleParts = document.title.split(' - ');
         this.state.siteName = titleParts.length > 1 ? titleParts[titleParts.length - 1] : 'CardStack';
 
+        // Shared view: only enable card click to view details (read-only)
+        if (this.state.isSharedView) {
+            this.initCardClick();
+            this.initCardModal();
+            this.initKeyboardShortcuts();
+            return;
+        }
+
+        // Normal view: enable all features
         this.initBoardTitle();
         this.initStarButton();
         this.initColumnTitle();
@@ -37,7 +48,28 @@ const BoardApp = {
         this.initCardModal();
         this.initDragAndDrop();
         this.initBoardMenu();
+        this.initShareModal();
         this.initKeyboardShortcuts();
+        this.checkUrlCardParam();
+    },
+
+    /**
+     * Check for card parameter in URL and open modal if present
+     */
+    checkUrlCardParam() {
+        const params = new URLSearchParams(window.location.search);
+        const cardId = params.get('card');
+        if (cardId) {
+            // Remove the parameter from URL to avoid reopening on refresh
+            params.delete('card');
+            const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            window.history.replaceState({}, '', newUrl);
+
+            // Open the card modal
+            setTimeout(() => {
+                this.openCardModal(cardId);
+            }, 100);
+        }
     },
 
     /**
@@ -435,6 +467,15 @@ const BoardApp = {
      * Render a card HTML
      */
     renderCard(card) {
+        let coverHtml = '';
+        if (card.coverImage) {
+            coverHtml = `
+                <div class="card-cover">
+                    <img src="${this.escapeHtml(card.coverImage)}" alt="" loading="lazy">
+                </div>
+            `;
+        }
+
         let labelsHtml = '';
         if (card.labels && card.labels.length > 0) {
             labelsHtml = `
@@ -445,7 +486,8 @@ const BoardApp = {
         }
 
         let badgesHtml = '';
-        if (card.description || card.dueDate) {
+        const hasBadges = card.description || card.dueDate || (card.attachments && card.attachments.length > 0);
+        if (hasBadges) {
             badgesHtml = '<div class="card-badges">';
             if (card.description) {
                 badgesHtml += `
@@ -472,11 +514,23 @@ const BoardApp = {
                     </span>
                 `;
             }
+            if (card.attachments && card.attachments.length > 0) {
+                badgesHtml += `
+                    <span class="card-badge" title="${card.attachments.length} attachment(s)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                        </svg>
+                        ${card.attachments.length}
+                    </span>
+                `;
+            }
             badgesHtml += '</div>';
         }
 
+        const draggable = this.state.isSharedView ? '' : 'draggable="true"';
         return `
-            <div class="card" data-card-id="${card.id}" draggable="true">
+            <div class="card" data-card-id="${card.id}" ${draggable}>
+                ${coverHtml}
                 ${labelsHtml}
                 <div class="card-title">${this.escapeHtml(card.title)}</div>
                 ${badgesHtml}
@@ -590,6 +644,36 @@ const BoardApp = {
                 App.toast('Failed to delete card', 'error');
             }
         });
+
+        // Cover button
+        document.getElementById('addCoverBtn')?.addEventListener('click', (e) => {
+            const popover = document.getElementById('coverPopover');
+            this.updateCoverPopover();
+            this.showPopover(popover, e.target);
+        });
+
+        // Remove cover button
+        document.getElementById('removeCover')?.addEventListener('click', async () => {
+            await this.removeCoverImage();
+            this.hidePopovers();
+        });
+
+        // Attachment button
+        document.getElementById('addAttachmentBtn')?.addEventListener('click', () => {
+            document.getElementById('attachmentFileInput')?.click();
+        });
+
+        // File input change handler
+        document.getElementById('attachmentFileInput')?.addEventListener('change', async (e) => {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+
+            for (const file of files) {
+                await this.uploadAttachment(file);
+            }
+
+            e.target.value = '';
+        });
     },
 
     /**
@@ -603,6 +687,7 @@ const BoardApp = {
 
             if (response.success) {
                 this.state.currentCard = response.data.card;
+                this.state.currentCardAttachments = response.data.card.attachments || [];
                 const card = this.state.currentCard;
 
                 // Populate modal
@@ -622,6 +707,9 @@ const BoardApp = {
                     cb.checked = card.labels?.includes(cb.value) || false;
                 });
 
+                // Render attachments
+                this.renderAttachments();
+
                 App.openModal(modal);
             }
         } catch (error) {
@@ -633,7 +721,7 @@ const BoardApp = {
      * Save current card
      */
     async saveCurrentCard() {
-        if (!this.state.currentCard) return;
+        if (!this.state.currentCard || this.state.isSharedView) return;
 
         const titleEl = document.getElementById('cardModalTitle');
         const descEl = document.getElementById('cardDescription');
@@ -1024,6 +1112,133 @@ const BoardApp = {
                 App.toast('Failed to delete board', 'error');
             }
         });
+
+        // Share board button - opens share modal
+        document.getElementById('shareBoardBtn')?.addEventListener('click', () => {
+            // Close board menu modal
+            document.getElementById('boardMenuModal')?.classList.remove('show');
+            // Open share modal
+            const shareModal = document.getElementById('shareBoardModal');
+            if (shareModal) {
+                this.loadShareStatus();
+                App.openModal(shareModal);
+            }
+        });
+    },
+
+    /**
+     * Initialize share modal
+     */
+    initShareModal() {
+        const modal = document.getElementById('shareBoardModal');
+        if (!modal) return;
+
+        const shareToggle = document.getElementById('shareEnabled');
+        const shareLinkSection = document.getElementById('shareLinkSection');
+        const shareLinkUrl = document.getElementById('shareLinkUrl');
+        const copyBtn = document.getElementById('copyShareLink');
+        const regenerateBtn = document.getElementById('regenerateShareLink');
+
+        // Toggle sharing on/off
+        shareToggle?.addEventListener('change', async () => {
+            const enabled = shareToggle.checked;
+
+            try {
+                if (enabled) {
+                    const response = await App.api(`/api/boards/${this.state.board.id}/share`, {
+                        method: 'POST'
+                    });
+
+                    if (response.success) {
+                        this.updateShareUI(response.data);
+                        App.toast('Public link enabled');
+                    }
+                } else {
+                    await App.api(`/api/boards/${this.state.board.id}/share`, {
+                        method: 'DELETE'
+                    });
+
+                    shareLinkSection.style.display = 'none';
+                    App.toast('Public link disabled');
+                }
+            } catch (error) {
+                shareToggle.checked = !enabled;
+                App.toast('Failed to update sharing', 'error');
+            }
+        });
+
+        // Copy share link
+        copyBtn?.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(shareLinkUrl.value);
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy';
+                }, 2000);
+            } catch (error) {
+                // Fallback for older browsers
+                shareLinkUrl.select();
+                document.execCommand('copy');
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy';
+                }, 2000);
+            }
+        });
+
+        // Regenerate share link
+        regenerateBtn?.addEventListener('click', async () => {
+            if (!confirm('Regenerate share link? The old link will stop working.')) return;
+
+            try {
+                const response = await App.api(`/api/boards/${this.state.board.id}/share/regenerate`, {
+                    method: 'POST'
+                });
+
+                if (response.success) {
+                    this.updateShareUI(response.data);
+                    App.toast('Share link regenerated');
+                }
+            } catch (error) {
+                App.toast('Failed to regenerate link', 'error');
+            }
+        });
+    },
+
+    /**
+     * Load current share status
+     */
+    async loadShareStatus() {
+        try {
+            const response = await App.api(`/api/boards/${this.state.board.id}/share`);
+
+            if (response.success) {
+                this.updateShareUI(response.data);
+            }
+        } catch (error) {
+            console.error('Failed to load share status', error);
+        }
+    },
+
+    /**
+     * Update share modal UI
+     */
+    updateShareUI(data) {
+        const shareToggle = document.getElementById('shareEnabled');
+        const shareLinkSection = document.getElementById('shareLinkSection');
+        const shareLinkUrl = document.getElementById('shareLinkUrl');
+
+        if (shareToggle) {
+            shareToggle.checked = data.enabled;
+        }
+
+        if (data.enabled && data.token) {
+            const baseUrl = window.location.origin;
+            shareLinkUrl.value = `${baseUrl}/s/${data.token}`;
+            shareLinkSection.style.display = 'block';
+        } else {
+            shareLinkSection.style.display = 'none';
+        }
     },
 
     /**
@@ -1043,6 +1258,226 @@ const BoardApp = {
                 });
             }
         });
+    },
+
+    /**
+     * Upload an attachment to the current card
+     */
+    async uploadAttachment(file) {
+        if (!this.state.currentCard) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch(`/api/cards/${this.state.currentCard.id}/attachments`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.state.currentCardAttachments.push(data.data);
+                this.state.currentCard.attachments = this.state.currentCardAttachments;
+                this.renderAttachments();
+                this.updateCardInDOM();
+                App.toast('Attachment uploaded');
+            } else {
+                App.toast(data.error || 'Failed to upload', 'error');
+            }
+        } catch (error) {
+            App.toast('Failed to upload attachment', 'error');
+        }
+    },
+
+    /**
+     * Delete an attachment from the current card
+     */
+    async deleteAttachment(attachmentId) {
+        if (!this.state.currentCard) return;
+
+        try {
+            await App.api(`/api/cards/${this.state.currentCard.id}/attachments/${attachmentId}`, {
+                method: 'DELETE'
+            });
+
+            this.state.currentCardAttachments = this.state.currentCardAttachments.filter(a => a.id !== attachmentId);
+            this.state.currentCard.attachments = this.state.currentCardAttachments;
+
+            // If deleted attachment was cover image, clear it
+            const deletedAttachment = this.state.currentCardAttachments.find(a => a.id === attachmentId);
+            if (this.state.currentCard.coverImage === deletedAttachment?.url) {
+                this.state.currentCard.coverImage = null;
+            }
+
+            this.renderAttachments();
+            this.updateCardInDOM();
+            App.toast('Attachment removed');
+        } catch (error) {
+            App.toast('Failed to remove attachment', 'error');
+        }
+    },
+
+    /**
+     * Set cover image for the current card
+     */
+    async setCoverImage(url) {
+        if (!this.state.currentCard) return;
+
+        try {
+            await App.api(`/api/cards/${this.state.currentCard.id}/cover`, {
+                method: 'PUT',
+                body: JSON.stringify({ url })
+            });
+
+            this.state.currentCard.coverImage = url;
+            this.updateCardInDOM();
+            App.toast('Cover image set');
+        } catch (error) {
+            App.toast('Failed to set cover', 'error');
+        }
+    },
+
+    /**
+     * Remove cover image from the current card
+     */
+    async removeCoverImage() {
+        if (!this.state.currentCard) return;
+
+        try {
+            await App.api(`/api/cards/${this.state.currentCard.id}/cover`, {
+                method: 'DELETE'
+            });
+
+            this.state.currentCard.coverImage = null;
+            this.updateCardInDOM();
+            App.toast('Cover image removed');
+        } catch (error) {
+            App.toast('Failed to remove cover', 'error');
+        }
+    },
+
+    /**
+     * Update the card in DOM
+     */
+    updateCardInDOM() {
+        const cardEl = document.querySelector(`.card[data-card-id="${this.state.currentCard.id}"]`);
+        if (cardEl) {
+            cardEl.outerHTML = this.renderCard(this.state.currentCard);
+            const newCardEl = document.querySelector(`.card[data-card-id="${this.state.currentCard.id}"]`);
+            this.attachCardClickHandler(newCardEl);
+            if (!this.state.isSharedView) {
+                this.attachCardDragHandlers(newCardEl);
+            }
+        }
+    },
+
+    /**
+     * Render attachments list in modal
+     */
+    renderAttachments() {
+        const section = document.getElementById('cardAttachmentsSection');
+        const list = document.getElementById('attachmentsList');
+
+        if (!section || !list) return;
+
+        if (this.state.currentCardAttachments.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+        list.innerHTML = this.state.currentCardAttachments.map(attachment => {
+            const isImage = attachment.type === 'image';
+            const thumbnail = isImage
+                ? `<img src="${this.escapeHtml(attachment.url)}" alt="" class="attachment-thumbnail">`
+                : `<div class="attachment-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                   </div>`;
+
+            const setCoverBtn = isImage && !this.state.isSharedView
+                ? `<button class="btn btn-ghost btn-sm attachment-set-cover" data-url="${this.escapeHtml(attachment.url)}">Set as Cover</button>`
+                : '';
+
+            const deleteBtn = !this.state.isSharedView
+                ? `<button class="btn btn-ghost btn-sm attachment-delete" data-id="${attachment.id}">Delete</button>`
+                : '';
+
+            return `
+                <div class="attachment-item">
+                    ${thumbnail}
+                    <div class="attachment-info">
+                        <div class="attachment-name">${this.escapeHtml(attachment.filename)}</div>
+                        <div class="attachment-meta">${this.formatFileSize(attachment.size)}</div>
+                    </div>
+                    <div class="attachment-actions">
+                        <a href="${this.escapeHtml(attachment.url)}" target="_blank" class="btn btn-ghost btn-sm">Open</a>
+                        ${setCoverBtn}
+                        ${deleteBtn}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Attach event handlers
+        list.querySelectorAll('.attachment-delete').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (confirm('Delete this attachment?')) {
+                    this.deleteAttachment(btn.dataset.id);
+                }
+            });
+        });
+
+        list.querySelectorAll('.attachment-set-cover').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.setCoverImage(btn.dataset.url);
+            });
+        });
+    },
+
+    /**
+     * Update cover popover with image attachments
+     */
+    updateCoverPopover() {
+        const list = document.getElementById('coverAttachmentsList');
+        if (!list) return;
+
+        const imageAttachments = this.state.currentCardAttachments.filter(a => a.type === 'image');
+
+        if (imageAttachments.length === 0) {
+            list.innerHTML = '<p class="cover-no-images">No image attachments available</p>';
+            return;
+        }
+
+        list.innerHTML = imageAttachments.map(attachment => `
+            <button class="cover-image-option" data-url="${this.escapeHtml(attachment.url)}">
+                <img src="${this.escapeHtml(attachment.url)}" alt="${this.escapeHtml(attachment.filename)}">
+            </button>
+        `).join('');
+
+        list.querySelectorAll('.cover-image-option').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                await this.setCoverImage(btn.dataset.url);
+                this.hidePopovers();
+            });
+        });
+    },
+
+    /**
+     * Format file size to human readable
+     */
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const units = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + units[i];
     },
 
     /**

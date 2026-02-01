@@ -42,6 +42,8 @@ class Board
                     'id' => $data['id'],
                     'title' => $data['title'],
                     'color' => $data['color'] ?? '#0079bf',
+                    'visibility' => $data['visibility'] ?? 'inherit',
+                    'allowedUsers' => $data['allowedUsers'] ?? [],
                     'createdAt' => $data['createdAt'],
                     'columnCount' => count($data['columns'] ?? []),
                     'cardCount' => $this->countCards($data),
@@ -53,6 +55,83 @@ class Board
         usort($boards, fn($a, $b) => strcmp($b['createdAt'], $a['createdAt']));
 
         return $boards;
+    }
+
+    /**
+     * Get all boards accessible by a specific user
+     */
+    public function getAllForUser(string $userId, array $accessibleBoardIds): array
+    {
+        $allBoards = $this->getAll();
+
+        // If user has full access, return all boards
+        if (in_array('*', $accessibleBoardIds, true)) {
+            return $allBoards;
+        }
+
+        // Filter to only accessible boards
+        return array_values(array_filter($allBoards, function ($board) use ($userId, $accessibleBoardIds) {
+            // Check if user has explicit access to this board
+            if (in_array($board['id'], $accessibleBoardIds, true)) {
+                return true;
+            }
+
+            // Check if board is public (when workspace is public)
+            if (Config::isWorkspacePublic()) {
+                $visibility = $board['visibility'] ?? 'inherit';
+                // 'inherit' means use workspace visibility (public)
+                // 'public' means explicitly public
+                if ($visibility === 'inherit' || $visibility === 'public') {
+                    return true;
+                }
+                // 'restricted' means check allowedUsers
+                if ($visibility === 'restricted') {
+                    $allowedUsers = $board['allowedUsers'] ?? [];
+                    return in_array($userId, $allowedUsers, true);
+                }
+            }
+
+            return false;
+        }));
+    }
+
+    /**
+     * Check if a specific user can access a board
+     */
+    public function canUserAccess(string $boardId, ?string $userId, array $accessibleBoardIds): bool
+    {
+        $board = $this->getById($boardId);
+        if ($board === null) {
+            return false;
+        }
+
+        // If user has full access, always allow
+        if (in_array('*', $accessibleBoardIds, true)) {
+            return true;
+        }
+
+        // Check if user has explicit access to this board
+        if (in_array($boardId, $accessibleBoardIds, true)) {
+            return true;
+        }
+
+        // Check board visibility when workspace is public
+        if (Config::isWorkspacePublic()) {
+            $visibility = $board['visibility'] ?? 'inherit';
+
+            // 'inherit' or 'public' means accessible
+            if ($visibility === 'inherit' || $visibility === 'public') {
+                return true;
+            }
+
+            // 'restricted' means check allowedUsers (only if user is logged in)
+            if ($visibility === 'restricted' && $userId !== null) {
+                $allowedUsers = $board['allowedUsers'] ?? [];
+                return in_array($userId, $allowedUsers, true);
+            }
+        }
+
+        return false;
     }
 
     private function countCards(array $board): int
@@ -83,6 +162,8 @@ class Board
             'id' => $id,
             'title' => sanitize($data['title'] ?? 'Untitled Board'),
             'color' => $data['color'] ?? '#0079bf',
+            'visibility' => $data['visibility'] ?? 'inherit',
+            'allowedUsers' => $data['allowedUsers'] ?? [],
             'createdAt' => now(),
             'columns' => [],
         ];
@@ -106,6 +187,17 @@ class Board
 
         if (isset($data['color'])) {
             $board['color'] = $data['color'];
+        }
+
+        if (isset($data['visibility'])) {
+            // Validate visibility value
+            if (in_array($data['visibility'], ['inherit', 'public', 'restricted'], true)) {
+                $board['visibility'] = $data['visibility'];
+            }
+        }
+
+        if (isset($data['allowedUsers']) && is_array($data['allowedUsers'])) {
+            $board['allowedUsers'] = array_values(array_filter($data['allowedUsers'], 'is_string'));
         }
 
         if (isset($data['columns'])) {
@@ -280,6 +372,132 @@ class Board
             if ($column['id'] === $columnId) {
                 return $column;
             }
+        }
+
+        return null;
+    }
+
+    // =========================================================================
+    // Share Link Methods
+    // =========================================================================
+
+    /**
+     * Generate a cryptographically secure share token
+     */
+    private function generateToken(): string
+    {
+        return bin2hex(random_bytes(6)); // 12 characters
+    }
+
+    /**
+     * Get a board by its share token
+     */
+    public function getByShareToken(string $token): ?array
+    {
+        $token = strtolower(trim($token));
+        $files = glob($this->dataPath . '/*.json');
+
+        if ($files === false) {
+            return null;
+        }
+
+        foreach ($files as $file) {
+            $data = $this->loadFile($file);
+            if ($data !== null) {
+                $boardToken = $data['shareToken'] ?? null;
+                if ($boardToken !== null && strtolower($boardToken) === $token) {
+                    return $data;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get share info for a board
+     */
+    public function getShareInfo(string $boardId): ?array
+    {
+        $board = $this->getById($boardId);
+        if ($board === null) {
+            return null;
+        }
+
+        return [
+            'enabled' => $board['shareEnabled'] ?? false,
+            'token' => $board['shareToken'] ?? null,
+            'createdAt' => $board['shareCreatedAt'] ?? null,
+        ];
+    }
+
+    /**
+     * Enable sharing for a board (generates token if needed)
+     */
+    public function enableSharing(string $boardId): ?array
+    {
+        $board = $this->getById($boardId);
+        if ($board === null) {
+            return null;
+        }
+
+        // Generate token if one doesn't exist
+        if (empty($board['shareToken'])) {
+            $board['shareToken'] = $this->generateToken();
+            $board['shareCreatedAt'] = now();
+        }
+
+        $board['shareEnabled'] = true;
+        $board['updatedAt'] = now();
+
+        if ($this->save($boardId, $board)) {
+            return [
+                'enabled' => true,
+                'token' => $board['shareToken'],
+                'createdAt' => $board['shareCreatedAt'],
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Disable sharing for a board (keeps token for re-enabling)
+     */
+    public function disableSharing(string $boardId): bool
+    {
+        $board = $this->getById($boardId);
+        if ($board === null) {
+            return false;
+        }
+
+        $board['shareEnabled'] = false;
+        $board['updatedAt'] = now();
+
+        return $this->save($boardId, $board);
+    }
+
+    /**
+     * Regenerate share token (invalidates old link)
+     */
+    public function regenerateShareToken(string $boardId): ?array
+    {
+        $board = $this->getById($boardId);
+        if ($board === null) {
+            return null;
+        }
+
+        $board['shareToken'] = $this->generateToken();
+        $board['shareCreatedAt'] = now();
+        $board['shareEnabled'] = true;
+        $board['updatedAt'] = now();
+
+        if ($this->save($boardId, $board)) {
+            return [
+                'enabled' => true,
+                'token' => $board['shareToken'],
+                'createdAt' => $board['shareCreatedAt'],
+            ];
         }
 
         return null;

@@ -136,18 +136,72 @@ switch (true) {
         require dirname(__DIR__) . '/templates/users.php';
         break;
 
+    // User edit page (admin only)
+    case preg_match('#^/users/([a-f0-9-]+)/edit$#', $path, $matches) === 1:
+        Auth::requireAdmin();
+        $currentUser = Auth::getCurrentUser();
+        $branding = Config::getBranding();
+        $userManager = Auth::getUserManager();
+        $editUser = $userManager->getById($matches[1]);
+
+        if ($editUser === null) {
+            http_response_code(404);
+            require dirname(__DIR__) . '/templates/404.php';
+            break;
+        }
+
+        require dirname(__DIR__) . '/templates/user-edit.php';
+        break;
+
+    // Public shared board view (no auth required)
+    case preg_match('#^/s/([a-zA-Z0-9]+)$#', $path, $matches) === 1:
+        $boardModel = new Board();
+        $board = $boardModel->getByShareToken(strtolower($matches[1]));
+
+        // Check if board exists and sharing is enabled
+        if ($board === null || !($board['shareEnabled'] ?? false)) {
+            http_response_code(404);
+            require dirname(__DIR__) . '/templates/404.php';
+            break;
+        }
+
+        // Mark as shared view (read-only)
+        $isSharedView = true;
+        $currentUser = Auth::getCurrentUser(); // May be null, that's OK
+
+        require dirname(__DIR__) . '/templates/board.php';
+        break;
+
     // Boards list
     case $path === '/boards':
-        Auth::requireAuth();
+        // Require auth for private workspaces, optional for public
+        if (!Config::isWorkspacePublic()) {
+            Auth::requireAuth();
+        }
         $currentUser = Auth::getCurrentUser();
         $boardModel = new Board();
-        $boards = $boardModel->getAll();
+
+        // Get accessible boards based on user permissions
+        if ($currentUser) {
+            $userManager = Auth::getUserManager();
+            $accessibleBoardIds = $userManager->getAccessibleBoardIds($currentUser['id']);
+            $boards = $boardModel->getAllForUser($currentUser['id'], $accessibleBoardIds);
+        } elseif (Config::isWorkspacePublic()) {
+            // Public workspace, no user - show public boards only
+            $boards = $boardModel->getAllForUser('', []);
+        } else {
+            $boards = [];
+        }
+
         require dirname(__DIR__) . '/templates/boards.php';
         break;
 
     // Single board view
     case preg_match('#^/board/([a-f0-9-]+)$#', $path, $matches) === 1:
-        Auth::requireAuth();
+        // Require auth for private workspaces, optional for public
+        if (!Config::isWorkspacePublic()) {
+            Auth::requireAuth();
+        }
         $currentUser = Auth::getCurrentUser();
         $boardModel = new Board();
         $board = $boardModel->getById($matches[1]);
@@ -158,6 +212,27 @@ switch (true) {
             break;
         }
 
+        // Check board access
+        $userId = $currentUser['id'] ?? null;
+        $accessibleBoardIds = [];
+        if ($currentUser) {
+            $userManager = Auth::getUserManager();
+            $accessibleBoardIds = $userManager->getAccessibleBoardIds($currentUser['id']);
+        }
+
+        if (!$boardModel->canUserAccess($matches[1], $userId, $accessibleBoardIds)) {
+            // No access - redirect to login if not logged in, or show 403
+            if (!$currentUser) {
+                redirect(baseUrl() . '/login');
+            } else {
+                http_response_code(403);
+                flash('error', 'You do not have access to this board');
+                redirect(baseUrl() . '/boards');
+            }
+            break;
+        }
+
+        $isSharedView = false; // Normal view, not shared
         require dirname(__DIR__) . '/templates/board.php';
         break;
 

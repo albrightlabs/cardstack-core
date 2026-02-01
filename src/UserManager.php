@@ -127,6 +127,10 @@ class UserManager
             'password_hash' => password_hash($password, PASSWORD_DEFAULT),
             'role' => $role,
             'is_super_admin' => $isSuperAdmin,
+            'permissions' => [
+                'full_access' => ($role === 'admin'),
+                'boards' => [],
+            ],
             'created_at' => now(),
             'updated_at' => now(),
             'last_login_at' => null,
@@ -254,6 +258,115 @@ class UserManager
     private function sanitizeUser(array $user): array
     {
         unset($user['password_hash']);
+        // Ensure permissions structure exists
+        if (!isset($user['permissions'])) {
+            $user['permissions'] = [
+                'full_access' => ($user['role'] === 'admin'),
+                'boards' => [],
+            ];
+        }
         return $user;
+    }
+
+    /**
+     * Update user permissions
+     */
+    public function updatePermissions(string $id, array $permissions): ?array
+    {
+        $this->load();
+
+        foreach ($this->data['users'] as &$user) {
+            if ($user['id'] === $id) {
+                // Validate permissions structure
+                $validPermissions = [
+                    'full_access' => isset($permissions['full_access']) ? (bool)$permissions['full_access'] : false,
+                    'boards' => [],
+                ];
+
+                // Validate boards array
+                if (isset($permissions['boards']) && is_array($permissions['boards'])) {
+                    foreach ($permissions['boards'] as $boardId) {
+                        if (is_string($boardId) && !empty(trim($boardId))) {
+                            $validPermissions['boards'][] = trim($boardId);
+                        }
+                    }
+                }
+
+                $user['permissions'] = $validPermissions;
+                $user['updated_at'] = now();
+                $this->save();
+
+                return $this->sanitizeUser($user);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Check if user has access to a specific board
+     */
+    public function hasBoardAccess(string $userId, string $boardId): bool
+    {
+        $this->load();
+
+        $user = null;
+        foreach ($this->data['users'] as $u) {
+            if ($u['id'] === $userId) {
+                $user = $u;
+                break;
+            }
+        }
+
+        if ($user === null) {
+            return false;
+        }
+
+        // Super admins and admins always have full access
+        if ($user['is_super_admin'] || $user['role'] === 'admin') {
+            return true;
+        }
+
+        $permissions = $user['permissions'] ?? ['full_access' => false, 'boards' => []];
+
+        if ($permissions['full_access']) {
+            return true;
+        }
+
+        // Check if board is in allowed boards list
+        return in_array($boardId, $permissions['boards'], true);
+    }
+
+    /**
+     * Get all board IDs user has access to
+     * Returns ['*'] if user has full access to all boards
+     */
+    public function getAccessibleBoardIds(string $userId): array
+    {
+        $this->load();
+
+        $user = null;
+        foreach ($this->data['users'] as $u) {
+            if ($u['id'] === $userId) {
+                $user = $u;
+                break;
+            }
+        }
+
+        if ($user === null) {
+            return [];
+        }
+
+        // Super admins and admins can access all boards
+        if ($user['is_super_admin'] || $user['role'] === 'admin') {
+            return ['*'];
+        }
+
+        $permissions = $user['permissions'] ?? ['full_access' => false, 'boards' => []];
+
+        if ($permissions['full_access']) {
+            return ['*'];
+        }
+
+        return $permissions['boards'] ?? [];
     }
 }

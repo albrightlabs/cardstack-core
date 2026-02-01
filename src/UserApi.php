@@ -87,6 +87,24 @@ class UserApi
             }
         }
 
+        if (preg_match('#^/api/users/([a-f0-9-]+)/permissions$#', $path, $matches)) {
+            Auth::requireAdmin();
+            if ($method === 'PUT') {
+                Auth::requireCsrf();
+                $this->updatePermissions($matches[1]);
+                return;
+            }
+        }
+
+        // Board list endpoint for permission UI
+        if (preg_match('#^/api/boards/list$#', $path)) {
+            Auth::requireAdmin();
+            if ($method === 'GET') {
+                $this->listBoardsForPermissions();
+                return;
+            }
+        }
+
         jsonError('Not found', 404);
     }
 
@@ -247,5 +265,38 @@ class UserApi
         }
 
         jsonSuccess(null);
+    }
+
+    private function updatePermissions(string $id): void
+    {
+        $input = getJsonInput();
+
+        if (!isset($input['permissions'])) {
+            jsonError('Permissions object is required');
+        }
+
+        $user = $this->userManager->updatePermissions($id, $input['permissions']);
+        if ($user === null) {
+            jsonError('User not found', 404);
+        }
+
+        jsonSuccess($user);
+    }
+
+    private function listBoardsForPermissions(): void
+    {
+        $board = new Board();
+        $boards = $board->getAll();
+
+        // Return minimal info needed for permission UI
+        $result = array_map(function ($b) {
+            return [
+                'id' => $b['id'],
+                'title' => $b['title'],
+                'color' => $b['color'] ?? '#0079bf',
+            ];
+        }, $boards);
+
+        jsonSuccess($result);
     }
 }

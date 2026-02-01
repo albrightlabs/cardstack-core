@@ -55,7 +55,21 @@ $flash = getFlash();
                 <?php endif; ?>
             </div>
             <div class="header-right">
+                <?php if (!empty($branding['external_link_url'])): ?>
+                <a href="<?= e($branding['external_link_url']) ?>" class="header-external-link" target="_blank" rel="noopener noreferrer">
+                    <?php if (!empty($branding['external_link_logo'])): ?>
+                    <img src="<?= e($branding['external_link_logo']) ?>" alt="<?= e($branding['external_link_name']) ?>" width="16" height="16">
+                    <?php endif; ?>
+                    <?= e($branding['external_link_name']) ?> &rarr;
+                </a>
+                <?php endif; ?>
                 <?php if (Auth::check()): ?>
+                <?php if (Auth::canWrite()): ?>
+                <span class="admin-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                    Admin
+                </span>
+                <?php endif; ?>
                 <div class="user-menu" id="user-menu">
                     <button type="button" class="user-menu-toggle" id="user-menu-toggle">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -66,7 +80,6 @@ $flash = getFlash();
                     <div class="user-menu-dropdown" id="user-menu-dropdown">
                         <div class="user-menu-info">
                             <span class="user-menu-email"><?= e($currentUser['email'] ?? '') ?></span>
-                            <span class="user-menu-role role-<?= e($currentUser['role'] ?? 'readonly') ?>"><?= ($currentUser['role'] ?? 'admin') === 'admin' ? 'Admin' : 'Read-Only' ?></span>
                         </div>
                         <?php if (Auth::isAdmin()): ?>
                         <a href="<?= baseUrl() ?>/users" class="user-menu-item">
@@ -77,6 +90,13 @@ $flash = getFlash();
                                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                             </svg>
                             Manage Users
+                        </a>
+                        <a href="#" class="user-menu-item" onclick="event.preventDefault(); App.showCleanupModal();">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Clean Up Uploads
                         </a>
                         <?php endif; ?>
                         <a href="<?= baseUrl() ?>/logout" class="user-menu-item user-menu-item-danger">
@@ -95,14 +115,6 @@ $flash = getFlash();
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                     </svg>
                     Login
-                </a>
-                <?php endif; ?>
-                <?php if (!empty($branding['external_link_url'])): ?>
-                <a href="<?= e($branding['external_link_url']) ?>" class="header-external-link" target="_blank" rel="noopener noreferrer">
-                    <?php if (!empty($branding['external_link_logo'])): ?>
-                    <img src="<?= e($branding['external_link_logo']) ?>" alt="<?= e($branding['external_link_name']) ?>" width="16" height="16">
-                    <?php endif; ?>
-                    <?= e($branding['external_link_name']) ?> &rarr;
                 </a>
                 <?php endif; ?>
             </div>
@@ -184,6 +196,7 @@ $flash = getFlash();
     </div>
 
     <script src="<?= asset('app.js') ?>"></script>
+    <script src="<?= asset('search.js') ?>"></script>
     <?php if (isset($scripts)): ?>
         <?php foreach ($scripts as $script): ?>
         <script src="<?= asset($script) ?>"></script>
