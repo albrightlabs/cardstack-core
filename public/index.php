@@ -20,7 +20,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 // Check if setup is needed (no users exist)
 if (!Auth::hasAnyUsers() && $path !== '/setup' && !str_starts_with($path, '/api/')) {
-    redirect(baseUrl() . '/setup');
+    redirect('/setup');
 }
 
 // Route handling
@@ -34,7 +34,7 @@ switch (true) {
     case $path === '/setup':
         // If users already exist, redirect to login
         if (Auth::hasAnyUsers()) {
-            redirect(baseUrl() . '/login');
+            redirect('/login');
         }
 
         $error = null;
@@ -67,7 +67,7 @@ switch (true) {
                         // Auto-login the new user
                         Auth::login($email, $password);
 
-                        redirect(baseUrl() . '/boards');
+                        redirect('/boards');
                     } catch (\Exception $e) {
                         $error = $e->getMessage();
                     }
@@ -80,13 +80,13 @@ switch (true) {
 
     // Home - redirect to boards
     case $path === '/':
-        redirect(baseUrl() . '/boards');
+        redirect('/boards');
         break;
 
     // Login page
     case $path === '/login':
         if (Auth::check()) {
-            redirect(baseUrl() . '/boards');
+            redirect('/boards');
         }
 
         $error = null;
@@ -104,7 +104,7 @@ switch (true) {
                 $email = $_POST['email'] ?? '';
                 $password = $_POST['password'] ?? '';
                 if (Auth::login($email, $password)) {
-                    redirect(baseUrl() . '/boards');
+                    redirect('/boards');
                 } else {
                     // Check if now rate limited after failed attempt
                     if (Auth::isRateLimited()) {
@@ -125,7 +125,7 @@ switch (true) {
     case $path === '/logout':
         Auth::logout();
         flash('success', 'You have been logged out');
-        redirect(baseUrl() . '/login');
+        redirect('/login');
         break;
 
     // User management page (admin only)
@@ -223,11 +223,11 @@ switch (true) {
         if (!$boardModel->canUserAccess($matches[1], $userId, $accessibleBoardIds)) {
             // No access - redirect to login if not logged in, or show 403
             if (!$currentUser) {
-                redirect(baseUrl() . '/login');
+                redirect('/login');
             } else {
                 http_response_code(403);
                 flash('error', 'You do not have access to this board');
-                redirect(baseUrl() . '/boards');
+                redirect('/boards');
             }
             break;
         }
