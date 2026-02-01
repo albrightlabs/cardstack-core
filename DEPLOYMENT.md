@@ -8,10 +8,11 @@ CardStack stores user accounts in `data/users.json` and boards in `data/boards/`
 
 ## Strategy Overview
 
-1. **User accounts** (`data/users.json`) are gitignored and copied between releases
-2. **Board data** (`data/boards/`) stays in git, with server changes synced back before each deployment
-3. **Uploads** are copied between releases
-4. Automated commits use `[skip ci]` to prevent deployment loops
+1. **Environment config** (`.env`) is gitignored and copied between releases
+2. **User accounts** (`data/users.json`) are gitignored and copied between releases
+3. **Board data** (`data/boards/`) stays in git, with server changes synced back before each deployment
+4. **Uploads** are copied between releases
+5. Automated commits use `[skip ci]` to prevent deployment loops
 
 ## Prerequisites
 
@@ -135,6 +136,16 @@ chmod -R 775 public/uploads
 # ═══════════════════════════════════════════════════════════════════════════════
 # SETUP: User data (environment-specific)
 # ═══════════════════════════════════════════════════════════════════════════════
+# Copy environment config from previous release
+PREVIOUS_ENV="/home/forge/$DOMAIN/current/.env"
+if [ -f "$PREVIOUS_ENV" ]; then
+    cp "$PREVIOUS_ENV" .env
+    echo "Preserved .env from previous release."
+elif [ -f ".env.example" ]; then
+    cp .env.example .env
+    echo "Created .env from template - UPDATE SITE_URL!"
+fi
+
 # Copy users from previous release (preserves accounts across deploys)
 PREVIOUS_USERS="/home/forge/$DOMAIN/current/data/users.json"
 PREVIOUS_UPLOADS="/home/forge/$DOMAIN/current/public/uploads"
@@ -192,7 +203,11 @@ This prevents the auto-sync commit from triggering another deployment.
 
 1. Deploy runs, no previous data to sync
 2. Fresh `users.json` created from template
-3. Visit site to run setup wizard and create admin account
+3. **Create `.env` file on server** with at minimum:
+   ```
+   SITE_URL=https://your-domain.com
+   ```
+4. Visit site to run setup wizard and create admin account
 
 ## Troubleshooting
 
