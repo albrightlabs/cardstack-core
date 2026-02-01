@@ -68,7 +68,9 @@ $FORGE_COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autol
 DOMAIN="boards.yourdomain.com"
 
 mkdir -p data/boards
+mkdir -p public/uploads
 chmod -R 775 data
+chmod -R 775 public/uploads
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SETUP: Data persistence (environment-specific)
@@ -77,6 +79,7 @@ chmod -R 775 data
 
 PREVIOUS_USERS="/home/forge/$DOMAIN/current/data/users.json"
 PREVIOUS_BOARDS="/home/forge/$DOMAIN/current/data/boards"
+PREVIOUS_UPLOADS="/home/forge/$DOMAIN/current/public/uploads"
 
 if [ -f "$PREVIOUS_USERS" ]; then
     cp "$PREVIOUS_USERS" data/users.json
@@ -86,6 +89,11 @@ fi
 if [ -d "$PREVIOUS_BOARDS" ]; then
     cp -r "$PREVIOUS_BOARDS"/* data/boards/ 2>/dev/null || true
     echo "Preserved boards from previous release."
+fi
+
+if [ -d "$PREVIOUS_UPLOADS" ]; then
+    cp -r "$PREVIOUS_UPLOADS"/* public/uploads/ 2>/dev/null || true
+    echo "Preserved uploads from previous release."
 fi
 
 # If no previous users file, the app will show setup wizard on first visit
