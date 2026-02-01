@@ -376,6 +376,62 @@ const UserMenu = {
                 App.showCleanupModal();
             });
         }
+    },
+
+    // =========================================================================
+    // Change Password
+    // =========================================================================
+
+    showChangePasswordModal() {
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        document.getElementById('passwordError').style.display = 'none';
+        this.openModal('changePasswordModal');
+    },
+
+    async savePassword() {
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const errorDiv = document.getElementById('passwordError');
+
+        if (newPassword.length < 8) {
+            errorDiv.textContent = 'New password must be at least 8 characters';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            errorDiv.textContent = 'Passwords do not match';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/auth/password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': this.getCsrfToken()
+                },
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                this.closeModal('changePasswordModal');
+                alert('Password changed successfully');
+            } else {
+                errorDiv.textContent = data.error || 'Failed to change password';
+                errorDiv.style.display = 'block';
+            }
+        } catch (error) {
+            errorDiv.textContent = 'Failed to change password';
+            errorDiv.style.display = 'block';
+        }
     }
 };
 

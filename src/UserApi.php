@@ -44,6 +44,16 @@ class UserApi
             }
         }
 
+        // Self-service password change (any authenticated user)
+        if (preg_match('#^/api/auth/password$#', $path)) {
+            if ($method === 'POST') {
+                Auth::requireAuth();
+                Auth::requireCsrf();
+                $this->changeOwnPassword();
+                return;
+            }
+        }
+
         // User management endpoints (admin only)
         if (preg_match('#^/api/users$#', $path)) {
             Auth::requireAdmin();
@@ -154,6 +164,41 @@ class UserApi
             jsonError('Not authenticated', 401);
         }
         jsonSuccess($user);
+    }
+
+    private function changeOwnPassword(): void
+    {
+        $input = getJsonInput();
+
+        $error = validateRequired($input, ['current_password', 'new_password']);
+        if ($error !== null) {
+            jsonError($error);
+        }
+
+        // Validate new password length
+        if (strlen($input['new_password']) < 8) {
+            jsonError('New password must be at least 8 characters');
+        }
+
+        // Get current user
+        $userId = Auth::getCurrentUserId();
+        $user = $this->userManager->getById($userId);
+        if ($user === null) {
+            jsonError('User not found', 404);
+        }
+
+        // Verify current password
+        $verifiedUser = $this->userManager->verifyPassword($user['email'], $input['current_password']);
+        if ($verifiedUser === null) {
+            jsonError('Current password is incorrect', 401);
+        }
+
+        // Update password
+        if ($this->userManager->changePassword($userId, $input['new_password'])) {
+            jsonSuccess(['message' => 'Password changed successfully']);
+        } else {
+            jsonError('Failed to change password', 500);
+        }
     }
 
     private function listUsers(): void

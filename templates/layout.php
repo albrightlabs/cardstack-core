@@ -99,6 +99,13 @@ $flash = getFlash();
                             Clean Up Uploads
                         </a>
                         <?php endif; ?>
+                        <a href="#" class="user-menu-item" onclick="event.preventDefault(); App.showChangePasswordModal();">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            Change Password
+                        </a>
                         <a href="<?= baseUrl() ?>/logout" class="user-menu-item user-menu-item-danger">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -321,6 +328,41 @@ $flash = getFlash();
         }
     })();
     </script>
+
+    <?php if (Auth::check()): ?>
+    <!-- Change Password Modal -->
+    <div class="modal" id="changePasswordModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Change Password</h2>
+                    <button type="button" class="modal-close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" id="currentPassword" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" class="form-control" required>
+                        <small class="form-text text-muted">Minimum 8 characters</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" class="form-control" required>
+                    </div>
+                    <div id="passwordError" class="alert alert-danger" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="App.savePassword()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <footer class="site-footer">
         <?php if (!empty($branding['footer_text'])): ?>
