@@ -13,6 +13,7 @@ const App = {
         this.initModals();
         this.initCreateBoardModal();
         this.initFlashMessages();
+        this.initPasswordModal();
     },
 
     /**
@@ -336,6 +337,91 @@ const App = {
                 console.error('Cleanup error:', error);
                 this.toast('Cleanup failed: ' + error.message, 'error');
             });
+    },
+
+    // =========================================================================
+    // Change Password
+    // =========================================================================
+
+    initPasswordModal() {
+        // Save password button
+        document.getElementById('save-password')?.addEventListener('click', () => this.savePassword());
+
+        // Close buttons with data-close attribute
+        document.querySelectorAll('[data-close="password-modal"]').forEach(btn => {
+            btn.addEventListener('click', () => this.closeModal('password-modal'));
+        });
+
+        // Close on backdrop click
+        document.getElementById('password-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'password-modal') {
+                this.closeModal('password-modal');
+            }
+        });
+    },
+
+    showChangePasswordModal() {
+        document.getElementById('current-password').value = '';
+        document.getElementById('new-password').value = '';
+        document.getElementById('confirm-password').value = '';
+        document.getElementById('password-error').style.display = 'none';
+        document.getElementById('password-success').style.display = 'none';
+        // Show form elements, hide success state
+        document.querySelectorAll('#password-modal .form-group').forEach(el => el.style.display = '');
+        document.querySelector('#password-modal .modal-actions').style.display = '';
+        this.openModal('password-modal');
+        document.getElementById('current-password').focus();
+    },
+
+    async savePassword() {
+        const currentPassword = document.getElementById('current-password').value;
+        const newPassword = document.getElementById('new-password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        const errorDiv = document.getElementById('password-error');
+
+        if (newPassword.length < 8) {
+            errorDiv.textContent = 'New password must be at least 8 characters';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            errorDiv.textContent = 'Passwords do not match';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/auth/password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': this.getCsrfToken()
+                },
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                // Hide form, show success message
+                document.querySelectorAll('#password-modal .form-group').forEach(el => el.style.display = 'none');
+                document.querySelector('#password-modal .modal-actions').style.display = 'none';
+                errorDiv.style.display = 'none';
+                const successDiv = document.getElementById('password-success');
+                successDiv.textContent = 'Password changed successfully';
+                successDiv.style.display = 'block';
+                // Auto-close after 1.5 seconds
+                setTimeout(() => this.closeModal('password-modal'), 1500);
+            } else {
+                errorDiv.textContent = data.error || 'Failed to change password';
+                errorDiv.style.display = 'block';
+            }
+        } catch (error) {
+            errorDiv.textContent = 'Failed to change password';
+            errorDiv.style.display = 'block';
+        }
     }
 };
 
@@ -375,62 +461,6 @@ const UserMenu = {
                 dropdown.classList.remove('show');
                 App.showCleanupModal();
             });
-        }
-    },
-
-    // =========================================================================
-    // Change Password
-    // =========================================================================
-
-    showChangePasswordModal() {
-        document.getElementById('currentPassword').value = '';
-        document.getElementById('newPassword').value = '';
-        document.getElementById('confirmPassword').value = '';
-        document.getElementById('passwordError').style.display = 'none';
-        this.openModal('changePasswordModal');
-    },
-
-    async savePassword() {
-        const currentPassword = document.getElementById('currentPassword').value;
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-        const errorDiv = document.getElementById('passwordError');
-
-        if (newPassword.length < 8) {
-            errorDiv.textContent = 'New password must be at least 8 characters';
-            errorDiv.style.display = 'block';
-            return;
-        }
-        if (newPassword !== confirmPassword) {
-            errorDiv.textContent = 'Passwords do not match';
-            errorDiv.style.display = 'block';
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/auth/password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': this.getCsrfToken()
-                },
-                body: JSON.stringify({
-                    current_password: currentPassword,
-                    new_password: newPassword
-                })
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                this.closeModal('changePasswordModal');
-                alert('Password changed successfully');
-            } else {
-                errorDiv.textContent = data.error || 'Failed to change password';
-                errorDiv.style.display = 'block';
-            }
-        } catch (error) {
-            errorDiv.textContent = 'Failed to change password';
-            errorDiv.style.display = 'block';
         }
     }
 };

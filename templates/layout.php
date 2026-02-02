@@ -331,33 +331,36 @@ $flash = getFlash();
 
     <?php if (Auth::check()): ?>
     <!-- Change Password Modal -->
-    <div class="modal" id="changePasswordModal">
-        <div class="modal-backdrop"></div>
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="modal-title">Change Password</h2>
-                    <button type="button" class="modal-close" data-dismiss="modal">&times;</button>
+    <div class="modal-overlay" id="password-modal">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h2 class="modal-title">Change Password</h2>
+                <button type="button" class="btn btn-icon modal-close" data-close="password-modal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Current Password</label>
+                    <input type="password" class="form-input" id="current-password" required>
                 </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="currentPassword">Current Password</label>
-                        <input type="password" id="currentPassword" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="newPassword">New Password</label>
-                        <input type="password" id="newPassword" class="form-control" required>
-                        <small class="form-text text-muted">Minimum 8 characters</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmPassword">Confirm New Password</label>
-                        <input type="password" id="confirmPassword" class="form-control" required>
-                    </div>
-                    <div id="passwordError" class="alert alert-danger" style="display: none;"></div>
+                <div class="form-group">
+                    <label class="form-label">New Password</label>
+                    <input type="password" class="form-input" id="new-password" required>
+                    <span class="form-help">Minimum 8 characters</span>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="App.savePassword()">Save</button>
+                <div class="form-group">
+                    <label class="form-label">Confirm New Password</label>
+                    <input type="password" class="form-input" id="confirm-password" required>
+                </div>
+                <div id="password-error" class="form-error" style="display: none;"></div>
+                <div id="password-success" class="form-success" style="display: none;"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" data-close="password-modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-password">Save</button>
                 </div>
             </div>
         </div>
