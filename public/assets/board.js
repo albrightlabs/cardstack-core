@@ -1403,11 +1403,11 @@ const BoardApp = {
                    </div>`;
 
             const setCoverBtn = isImage && !this.state.isSharedView
-                ? `<button class="btn btn-ghost btn-sm attachment-set-cover" data-url="${this.escapeHtml(attachment.url)}">Set as Cover</button>`
+                ? `<button type="button" class="btn btn-ghost btn-sm attachment-set-cover" data-url="${this.escapeHtml(attachment.url)}">Set as Cover</button>`
                 : '';
 
             const deleteBtn = !this.state.isSharedView
-                ? `<button class="btn btn-ghost btn-sm attachment-delete" data-id="${attachment.id}">Delete</button>`
+                ? `<button type="button" class="btn btn-ghost btn-sm attachment-delete" data-id="${attachment.id}">Delete</button>`
                 : '';
 
             return `
@@ -1418,7 +1418,7 @@ const BoardApp = {
                         <div class="attachment-meta">${this.formatFileSize(attachment.size)}</div>
                     </div>
                     <div class="attachment-actions">
-                        <a href="${this.escapeHtml(attachment.url)}" target="_blank" class="btn btn-ghost btn-sm">Open</a>
+                        <a href="${this.escapeHtml(attachment.url)}" target="_blank" class="btn btn-ghost btn-sm attachment-open">Open</a>
                         ${setCoverBtn}
                         ${deleteBtn}
                     </div>
@@ -1426,20 +1426,29 @@ const BoardApp = {
             `;
         }).join('');
 
-        // Attach event handlers
-        list.querySelectorAll('.attachment-delete').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (confirm('Delete this attachment?')) {
-                    this.deleteAttachment(btn.dataset.id);
-                }
-            });
-        });
+        // Use event delegation for attachment actions (more reliable for dynamic content)
+        // Remove old listener if exists to prevent duplicates
+        if (this._attachmentClickHandler) {
+            list.removeEventListener('click', this._attachmentClickHandler);
+        }
 
-        list.querySelectorAll('.attachment-set-cover').forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.setCoverImage(btn.dataset.url);
-            });
-        });
+        this._attachmentClickHandler = (e) => {
+            const target = e.target.closest('button, a');
+            if (!target) return;
+
+            if (target.classList.contains('attachment-delete')) {
+                e.preventDefault();
+                if (confirm('Delete this attachment?')) {
+                    this.deleteAttachment(target.dataset.id);
+                }
+            } else if (target.classList.contains('attachment-set-cover')) {
+                e.preventDefault();
+                this.setCoverImage(target.dataset.url);
+            }
+            // Open links work natively via href, no handler needed
+        };
+
+        list.addEventListener('click', this._attachmentClickHandler);
     },
 
     /**
