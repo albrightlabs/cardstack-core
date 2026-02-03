@@ -829,6 +829,9 @@ const BoardApp = {
      * Handle card drag start
      */
     handleCardDragStart(e, card) {
+        // Stop propagation to prevent column from also starting a drag
+        e.stopPropagation();
+
         this.state.draggedItem = card;
         this.state.dragType = 'card';
 
@@ -948,6 +951,12 @@ const BoardApp = {
         const newColumnId = e.currentTarget.dataset.columnId;
         const cards = [...e.currentTarget.querySelectorAll('.card:not(.dragging)')];
         const newPosition = cards.indexOf(card);
+
+        // Reset card visual state immediately after drop
+        if (card) {
+            card.classList.remove('dragging');
+            card.style.opacity = '';
+        }
 
         try {
             await App.api(`/api/cards/${cardId}/move`, {
