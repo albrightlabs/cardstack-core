@@ -25,26 +25,55 @@ $error = $error ?? null;
     </style>
     <?php endif; ?>
 </head>
-<body class="password-page">
-    <div class="password-container">
-        <div class="password-icon">🔐</div>
-        <h1>Sign In</h1>
-        <p class="password-section-name">Enter your credentials to access <strong><?= e($appName) ?></strong>.</p>
+<body>
+    <header class="site-header">
+        <div>
+            <div class="header-left">
+                <span class="site-logo">
+                    <?php if (!empty($branding['logo_url'])): ?>
+                    <img src="<?= e($branding['logo_url']) ?>" alt="<?= e($branding['site_name']) ?>"<?= !empty($branding['logo_width']) ? ' style="max-width: ' . e($branding['logo_width']) . 'px;"' : '' ?>>
+                    <?php else: ?>
+                    <?php if (!empty($branding['site_emoji'])): ?>
+                    <span class="site-logo-emoji"><?= e($branding['site_emoji']) ?></span>
+                    <?php endif; ?>
+                    <?= e($branding['site_name']) ?>
+                    <?php endif; ?>
+                </span>
+            </div>
+            <div class="header-right">
+                <?php if (!empty($branding['external_link_url'])): ?>
+                <a href="<?= e($branding['external_link_url']) ?>" class="header-external-link" target="_blank" rel="noopener noreferrer">
+                    <?php if (!empty($branding['external_link_logo'])): ?>
+                    <img src="<?= e($branding['external_link_logo']) ?>" alt="<?= e($branding['external_link_name']) ?>" width="16" height="16">
+                    <?php endif; ?>
+                    <?= e($branding['external_link_name']) ?> &rarr;
+                </a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </header>
 
-        <?php if ($error): ?>
-        <div class="password-error"><?= e($error) ?></div>
-        <?php endif; ?>
+    <div class="password-page">
+        <div class="password-container">
+            <div class="password-icon">🔐</div>
+            <h1>Sign In</h1>
+            <p class="password-section-name">Enter your credentials to access <strong><?= e($appName) ?></strong>.</p>
 
-        <form method="POST" action="<?= baseUrl() ?>/login" class="password-form">
-            <?= Auth::csrfField() ?>
-            <input type="email" id="email" name="email" class="password-input"
-                   placeholder="Email address"
-                   value="<?= e($_POST['email'] ?? '') ?>"
-                   required autofocus>
-            <input type="password" id="password" name="password" class="password-input"
-                   placeholder="Password" required>
-            <button type="submit" class="password-submit">Sign In</button>
-        </form>
+            <?php if ($error): ?>
+            <div class="password-error"><?= e($error) ?></div>
+            <?php endif; ?>
+
+            <form method="POST" action="<?= baseUrl() ?>/login" class="password-form">
+                <?= Auth::csrfField() ?>
+                <input type="email" id="email" name="email" class="password-input"
+                       placeholder="Email address"
+                       value="<?= e($_POST['email'] ?? '') ?>"
+                       required autofocus>
+                <input type="password" id="password" name="password" class="password-input"
+                       placeholder="Password" required>
+                <button type="submit" class="password-submit">Sign In</button>
+            </form>
+        </div>
     </div>
 
     <!-- Dynamic Favicon Generation -->

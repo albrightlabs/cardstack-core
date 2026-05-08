@@ -1731,7 +1731,7 @@ input, textarea {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    min-height: calc(100vh - var(--header-height));
     background: var(--bg-secondary);
     padding: 20px;
 }
@@ -1839,7 +1839,7 @@ input, textarea {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    min-height: calc(100vh - var(--header-height));
     background: var(--bg-secondary);
 }
 
